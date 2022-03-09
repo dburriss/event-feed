@@ -1,0 +1,2 @@
+INSERT INTO [dbo].[__FeedEvents] (EventId, CreatedAt, EventName, EventSchemaVersion, Payload, SpanId, TraceId)
+VALUES (@EventId, @CreatedAt, @EventName, @EventSchemaVersion, @Payload, @SpanId, @TraceId)

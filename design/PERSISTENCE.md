@@ -25,11 +25,11 @@ When persisting an `Event`, it contains the following data with corresponding ty
 |--------------------|--------------------|--------------------------------------------------------------------------------------|
 | Id                 | `bigint`           | Autoincrement numeric internal identifier. Should never be shared.                   |
 | EventId            | `uniqueidentifier` | Unique identifier for this specific event                                            |
-| EventName          | `VARCHAR(255)`     | The type of event this is eg. `customer-created`                                     |
+| EventName          | `varchar(255)`     | The type of event this is eg. `customer-created`                                     |
 | EventSchemaVersion | `smallint`         | A version number that increments with changes to the schema                          |
-| Payload            | `NVARCHAR(4000)`   | Allows for a JSON payload of 8KB ~ 100 lines of JSON. Events should be small anyway. |
-| SpanId             | `CHAR(8)`          | The span identifier. Should be max 8 bytes.                                          |
-| TraceId            | `CHAR(16)`         | The trace identifier. Should be max 16 bytes                                         |
+| Payload            | `nvarchar(4000)`   | Allows for a JSON payload of 8KB ~ 100 lines of JSON. Events should be small anyway. |
+| SpanId             | `char(8)`          | The span identifier. Should be max 8 bytes.                                          |
+| TraceId            | `char(16)`         | The trace identifier. Should be max 16 bytes                                         |
 | CreatedAt          | `datetimeoffset`   | The date and time the event was created in the application                           |
 
 In addition to storing the above data, the event table needs additional data to help consumers be sure they are receiving events in the order they were created, and they have not missed any events.
