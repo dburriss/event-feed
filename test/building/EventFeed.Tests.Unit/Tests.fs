@@ -25,7 +25,7 @@ let ``NewFeedEvent sets date and time`` () =
 
 [<Fact>]
 let ``NewFeedEvent with object payload is serialized`` () =
-    let o = {| AValue = "value" |}
-    let ev = FeedEvent.fromObj "test-event" o None None None None
+    let anObject = {| AValue = "value" |}
+    let ev = FeedEvent.fromObj "test-event" anObject None None None None
     let deserialized = JsonSerializer.Deserialize<{| AValue: string |}>(ev.Payload)
-    Assert.Equal(o.AValue, deserialized.AValue)
+    Assert.Equal(anObject.AValue, deserialized.AValue)
