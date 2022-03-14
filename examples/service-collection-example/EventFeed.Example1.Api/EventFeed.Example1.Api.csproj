@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\EventFeed.AspNetCore\EventFeed.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\src\EventFeed.Producer.MSSQL\EventFeed.Producer.MSSQL.fsproj" />
   </ItemGroup>
 
 </Project>

@@ -8,7 +8,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddEventFeed(_ => new EventFeed.Testing.InMemoryEventFeedReader(100));
+builder.Services.AddEventFeed(_ => new EventFeed.MSSQL.MSSQLEventFeedReader(Environment.GetEnvironmentVariable("EVENTFEED_MSSQL_CONNECTION", EnvironmentVariableTarget.User)));
 
 var app = builder.Build();
 
