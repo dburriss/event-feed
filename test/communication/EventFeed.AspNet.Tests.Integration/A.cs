@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Hosting;
+using EventFeed;
 using EventFeed.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using EventFeed.Testing;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
 
 namespace EventFeed.AspNet.Tests.Integration
 {
@@ -22,6 +24,24 @@ namespace EventFeed.AspNet.Tests.Integration
         public AHostBuilder With(params FeedEvent[] events)
         {
             this.events.AddRange(events);
+            return this;
+        }
+        public AHostBuilder WithRandomEvents(int eventsToCreate)
+        {
+            for (int i = 0; i < eventsToCreate; i++)
+            {
+                var ev = new FeedEvent(
+                    eventId: Guid.NewGuid(),
+                    eventName: "test-event",
+                    eventSchemaVersion: 1,
+                    payload: "{ clicked: true }",
+                    sequenceNumber: events.Count + 1,
+                    spanId: Telemetry.getSpanId().ToString(),
+                    createdAt: DateTimeOffset.UtcNow,
+                    traceId: Telemetry.getTraceId().ToString()
+                );
+                this.With(ev);
+            }
             return this;
         }
 
@@ -43,6 +63,7 @@ namespace EventFeed.AspNet.Tests.Integration
                 })
                 .StartAsync();
         }
+
     }
     internal static class A
     {

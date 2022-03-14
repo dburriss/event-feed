@@ -1,7 +1,7 @@
 ﻿namespace EventFeed.Testing
 
-open EventFeed.Abstractions
 open EventFeed
+open EventFeed.Abstractions
 
 type InMemoryEventFeedReader(eventPerPage: int,  evs: (FeedEvent seq)) =
 
@@ -18,4 +18,4 @@ type InMemoryEventFeedReader(eventPerPage: int,  evs: (FeedEvent seq)) =
             EventsPerPage = eventPerPage
         }
         member this.ReadPage page = 
-            Seq.empty
+            events |> Seq.skip (eventPerPage * (page - 1)) |> Seq.truncate eventPerPage
