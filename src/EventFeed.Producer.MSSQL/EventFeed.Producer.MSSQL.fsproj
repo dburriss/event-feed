@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <Compile Include="Events.fs" />
+    <Compile Include="MSSQLEventFeedReader.fs" />
   </ItemGroup>
 
   <ItemGroup>

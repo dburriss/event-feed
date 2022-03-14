@@ -137,3 +137,18 @@ module IntegrationTests =
             Assert.NotEmpty events
         finally
             conn.Dispose()
+
+    
+    [<Fact>]
+    // this test assumes data exists
+    let ``EventCount returns a number`` () =
+
+        let connString = connectionString()
+        use conn = new SqlConnection(connString)
+
+        ensureOpen conn
+        try
+            let eventCount = Events.CountEvents conn        
+            Assert.True(eventCount >= 0)
+        finally
+            conn.Dispose()

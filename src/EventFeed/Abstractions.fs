@@ -8,5 +8,6 @@ type EventNumbers = {
 }
 
 type IEventFeedReader =
+    inherit System.IDisposable
     abstract member EventNumbers: unit -> EventNumbers
     abstract member ReadPage: int -> FeedEvent seq

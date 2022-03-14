@@ -110,4 +110,10 @@ module Events =
             else None
         finally
             reader.Close()
+
+    let private countEventSql = """SELECT COUNT_BIG([Id]) FROM [__FeedEvents]"""
+
+    let CountEvents (connection: SqlConnection) =
+        let command = new SqlCommand(countEventSql, connection)
+        command.ExecuteScalar() :?> int64
             
