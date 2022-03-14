@@ -123,17 +123,7 @@ namespace EventFeed.AspNetCore
                         }
                         else
                         {
-                            var events = feedReader.ReadPage(pageNumber).ToArray();
-                            var headLink = HeadLink(basePath);
-                            string previousLink = PreviousLink(basePath, pageNumber);
-                            string selfLink = SelfLink(basePath, pageNumber);
-                            string nextLink = NextLink(basePath, pageNumber, totalPages);
-                            var tailLink = TailLink(basePath, totalPages);
-                            var links = new Links(basePath, headLink, previousLink, selfLink, nextLink, tailLink);
-                            var isComplete = events.Length == eventsPerPage;
-                            var content = new EventFeedPage(pageNumber, events, links, isComplete);
-                            context.Response.ContentType = "application/json";
-                            await context.Response.WriteAsync(JsonSerializer.Serialize(content));
+                            await EventFeedPage(context, basePath, eventsPerPage, totalPages, pageNumber);
                         }
                     }
                     else
@@ -146,6 +136,21 @@ namespace EventFeed.AspNetCore
             {
                 await next(context);
             }
+        }
+
+        private async Task EventFeedPage(HttpContext context, string basePath, int eventsPerPage, int totalPages, int pageNumber)
+        {
+            var events = feedReader.ReadPage(pageNumber).ToArray();
+            var headLink = HeadLink(basePath);
+            string previousLink = PreviousLink(basePath, pageNumber);
+            string selfLink = SelfLink(basePath, pageNumber);
+            string nextLink = NextLink(basePath, pageNumber, totalPages);
+            var tailLink = TailLink(basePath, totalPages);
+            var links = new Links(basePath, headLink, previousLink, selfLink, nextLink, tailLink);
+            var isComplete = events.Length == eventsPerPage;
+            var content = new EventFeedPage(pageNumber, events, links, isComplete);
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(content));
         }
 
         private static string PreviousLink(string basePath, int pageNumber)
