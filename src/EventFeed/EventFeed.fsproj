@@ -7,6 +7,12 @@
 
   <ItemGroup>
     <Compile Include="Library.fs" />
+    <Compile Include="Abstractions.fs" />
+    <Compile Include="Testing.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="6.0.3" />
   </ItemGroup>
 
 </Project>

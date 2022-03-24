@@ -8,11 +8,6 @@ module Events =
     open Microsoft.Data.SqlClient
     open EventFeed
 
-    let private ensureOpen (connection: #DbConnection) =
-        if connection.State <> ConnectionState.Open then 
-            do connection.Open()
-           // System.Threading.Thread.Sleep(10)
-
     let private insertSql = """
         INSERT INTO dbo.[__FeedEvents] (EventId, EventName, EventSchemaVersion, Payload, SpanId, CreatedAt, TraceId)
         VALUES (@EventId, @EventName, @EventSchemaVersion, @Payload, @SpanId, @CreatedAt, @TraceId)"""
@@ -110,4 +105,10 @@ module Events =
             else None
         finally
             reader.Close()
+
+    let private countEventSql = """SELECT COUNT_BIG([Id]) FROM [__FeedEvents]"""
+
+    let CountEvents (connection: SqlConnection) =
+        let command = new SqlCommand(countEventSql, connection)
+        command.ExecuteScalar() :?> int64
             
