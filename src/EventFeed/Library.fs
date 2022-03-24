@@ -81,3 +81,7 @@ module FeedEvent =
     [<CompiledName("FromObject")>]
     let fromObj name (payload: obj) time version traceId spanId =
         from name (serialize payload) time version traceId spanId
+
+    [<CompiledName("WithDefaults")>]
+    let withObjDefaults name (payload: obj) =
+        from name (serialize payload) None None None None

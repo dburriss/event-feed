@@ -1,7 +1,7 @@
 ﻿namespace EventFeed.Testing
 
 open EventFeed
-open EventFeed.Abstractions
+open EventFeed.Producer.Abstractions
 
 type InMemoryEventFeedReader(eventPerPage: int,  evs: (FeedEvent seq)) =
 

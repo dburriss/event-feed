@@ -1,14 +1,18 @@
 using EventFeed.AspNetCore;
+using EventFeed.Example1.Api;
+using EventFeed.MSSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+var config = builder.Configuration.AddJsonFile("appsettings.json", false, true).Build();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddEventFeed(_ => new EventFeed.MSSQL.MSSQLEventFeedReader(Environment.GetEnvironmentVariable("EVENTFEED_MSSQL_CONNECTION", EnvironmentVariableTarget.User)));
+builder.Services.AddEventFeed(_ => new MSSQLEventFeedReader(config.GetConnectionString("Data")));
+builder.Services.AddTransient<TemperatureData>(c => new TemperatureData(config.GetConnectionString("Data")));
 
 var app = builder.Build();
 

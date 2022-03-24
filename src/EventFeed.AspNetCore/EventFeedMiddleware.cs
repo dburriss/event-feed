@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using EventFeed.Abstractions;
+using EventFeed.Producer.Abstractions;
 using System.Text.Json;
 
 namespace EventFeed.AspNetCore

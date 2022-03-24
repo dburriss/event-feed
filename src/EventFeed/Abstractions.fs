@@ -1,4 +1,4 @@
-﻿namespace EventFeed.Abstractions
+﻿namespace EventFeed.Producer.Abstractions
 
 open EventFeed
 
