@@ -65,6 +65,7 @@ namespace EventFeed.AspNet.Tests.Integration
         }
 
     }
+
     internal static class A
     {
         public static AHostBuilder Host => new AHostBuilder();

@@ -9,6 +9,8 @@ namespace EventFeed.AspNet.Tests.Integration
 {
     public class APageRequest
     {
+        private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
         [Fact]
         public async Task With_no_events_head_is_reachable()
         {
@@ -41,10 +43,10 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.Build();
             var nonExistentPage = 2;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{nonExistentPage}");
-            var badRequest = JsonSerializer.Deserialize<BadRequestContent>(await response.Content.ReadAsStringAsync());
-            Assert.Equal("/api/event-feed", badRequest._links._meta);
-            Assert.Equal("/api/event-feed/page/1", badRequest._links._head);
-            Assert.Equal("/api/event-feed/page/1", badRequest._links._tail);
+            var badRequest = JsonSerializer.Deserialize<BadRequestContent>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            Assert.Equal("/api/event-feed", badRequest.Links.Meta);
+            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Head);
+            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Tail);
         }
 
         [Fact]
@@ -53,9 +55,9 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.Build();
             var page = 1;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{page}");
-            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync());
-            Assert.Equal(page, pageMeta.page);
-            Assert.Empty(pageMeta.events);
+            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync();, _jsonSerializerOptions);
+            Assert.Equal(page, pageMeta.Page);
+            Assert.Empty(pageMeta.Events);
         }
 
         [Fact]
@@ -64,8 +66,8 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(5).Build();
             var page = 1;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{page}");
-            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync());
-            Assert.NotEmpty(pageMeta.events);
+            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            Assert.NotEmpty(pageMeta.Events);
         }
 
         [Fact]
@@ -74,8 +76,8 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(5).Build();
             var page = 1;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{page}");
-            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync());
-            Assert.Empty(pageMeta._links._next);
+            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            Assert.Empty(pageMeta.Links.Next);
         }
 
         [Fact]
@@ -84,8 +86,8 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(5).Build();
             var page = 1;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{page}");
-            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync());
-            Assert.Empty(pageMeta._links._previous);
+            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            Assert.Empty(pageMeta.Links.Previous);
         }
 
         [Fact]
@@ -93,8 +95,8 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(20).Build();
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/2");
-            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync());
-            Assert.Equal("/api/event-feed/page/1", pageMeta._links._previous);
+            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            Assert.Equal("/api/event-feed/page/1", pageMeta.Links.Previous);
         }
 
         [Fact]
@@ -103,8 +105,8 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(20).Build();
             var page = 2;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{page}");
-            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync());
-            Assert.NotEmpty(pageMeta.events);
+            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            Assert.NotEmpty(pageMeta.Events);
         }
 
         [Fact]
@@ -115,12 +117,12 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.SetEventsPerPage(pageLength).WithRandomEvents(totalEvents).Build();
             var response1 = await host.GetTestClient().GetAsync($"/api/event-feed/page/1");
             var response2 = await host.GetTestClient().GetAsync($"/api/event-feed/page/2");
-            var pageMeta1 = JsonSerializer.Deserialize<EventFeedPage>(await response1.Content.ReadAsStringAsync());
-            var pageMeta2 = JsonSerializer.Deserialize<EventFeedPage>(await response2.Content.ReadAsStringAsync());
-            var pg1FirstEv = pageMeta1.events[0];
-            var pg1LastEv = pageMeta1.events[pageLength - 1];
-            var pg2FirstEv = pageMeta2.events[0];
-            var pg2LastEv = pageMeta2.events[pageLength - 1];
+            var pageMeta1 = JsonSerializer.Deserialize<EventFeedPage>(await response1.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            var pageMeta2 = JsonSerializer.Deserialize<EventFeedPage>(await response2.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            var pg1FirstEv = pageMeta1.Events[0];
+            var pg1LastEv = pageMeta1.Events[pageLength - 1];
+            var pg2FirstEv = pageMeta2.Events[0];
+            var pg2LastEv = pageMeta2.Events[pageLength - 1];
 
             Assert.Equal(1, pg1FirstEv.SequenceNumber);
             Assert.Equal(10, pg1LastEv.SequenceNumber);

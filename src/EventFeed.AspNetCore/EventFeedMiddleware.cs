@@ -3,79 +3,100 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using EventFeed.Producer.Abstractions;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using EventFeed.AspNetCore.Serialization;
 
 namespace EventFeed.AspNetCore
 {
     public class MetaLinks
     {
-        public MetaLinks(string _meta, string _head, string _tail)
+        public MetaLinks(string meta, string head, string tail)
         {
-            this._meta = _meta;
-            this._head = _head;
-            this._tail = _tail;
+            Meta = meta;
+            Head = head;
+            Tail = tail;
         }
 
-        public string _meta { get; private set; }
-        public string _head { get; private set; }
-        public string _tail { get; private set; }
+        [JsonPropertyName("_meta")]
+        public string Meta { get; private set; }
+        [JsonPropertyName("_head")]
+        public string Head { get; private set; }
+        [JsonPropertyName("_tail")]
+        public string Tail { get; private set; }
     }
 
     public class Links
     {
-        public Links(string _meta, string _head, string _previous, string _self, string _next, string _tail)
+        public Links(string meta, string head, string previous, string self, string next, string tail)
         {
-            this._meta = _meta;
-            this._head = _head;
-            this._previous = _previous;
-            this._self = _self;
-            this._next = _next;
-            this._tail = _tail;
+            Meta = meta;
+            Head = head;
+            Previous = previous;
+            Self = self;
+            Next = next;
+            Tail = tail;
         }
 
-        public string _meta { get; private set; }
-        public string _head { get; private set; }
-        public string _previous { get; private set; }
-        public string _self { get; private set; }
-        public string _next { get; private set; }
-        public string _tail { get; private set; }
+        [JsonPropertyName("_meta")]
+        public string Meta { get; private set; }
+        [JsonPropertyName("_head")]
+        public string Head { get; private set; }
+        [JsonPropertyName("_previous")]
+        public string Previous { get; private set; }
+        [JsonPropertyName("_self")]
+        public string Self { get; private set; }
+        [JsonPropertyName("_next")]
+        public string Next { get; private set; }
+        [JsonPropertyName("_tail")]
+        public string Tail { get; private set; }
     }
 
     public class PageMeta
     {
-        public PageMeta(long eventCount, int eventsPerPage, int pages, MetaLinks _links)
+        public PageMeta(long eventCount, int eventsPerPage, int pages, MetaLinks links)
         {
             EventCount = eventCount;
             EventsPerPage = eventsPerPage;
             Pages = pages;
-            this._links = _links;
+            Links = links;
         }
 
+        [JsonPropertyName("eventCount")]
         public long EventCount { get; private set; }
+        [JsonPropertyName("eventsPerPage")]
         public int EventsPerPage { get; private set; }
+        [JsonPropertyName("pages")]
         public int Pages { get; private set; }
-        public MetaLinks _links { get; set; }
+        [JsonPropertyName("_links")]
+        public MetaLinks Links { get; set; }
     }
 
     public class EventFeedPage
     {
-        public EventFeedPage(int page, FeedEvent[] events, Links _links, bool isComplete)
+        public EventFeedPage(int page, FeedEvent[] events, Links links, bool isComplete)
         {
-            this.page = page;
-            this.events = events;
-            this._links = _links;
-            this.isComplete = isComplete;
+            Page = page;
+            Events = events;
+            Links = links;
+            IsComplete = isComplete;
         }
 
-        public int page { get; private set; }
-        public FeedEvent[] events { get; private set; }
-        public Links _links { get; private set; }
-        public bool isComplete { get; private set; }
+        [JsonPropertyName("page")]
+        public int Page { get; private set; }
+        [JsonPropertyName("events")]
+        public FeedEvent[] Events { get; private set; }
+        [JsonPropertyName("_links")]
+        public Links Links { get; private set; }
+        [JsonPropertyName("isComplete")]
+        public bool IsComplete { get; private set; }
     }
 
     public class BadRequestContent
     {
-        public string message { get; set; }
-        public MetaLinks _links { get; set; }
+        [JsonPropertyName("message")]
+        public string Message { get; set; }
+        [JsonPropertyName("_links")]
+        public MetaLinks Links { get; set; }
     }
 
     public class EventFeedMiddleware : IMiddleware
@@ -150,7 +171,7 @@ namespace EventFeed.AspNetCore
             var isComplete = events.Length == eventsPerPage;
             var content = new EventFeedPage(pageNumber, events, links, isComplete);
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(content));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(content, EventFeedPageSerializerContext.Default.EventFeedPage));
         }
 
         private static string PreviousLink(string basePath, int pageNumber)
@@ -198,12 +219,12 @@ namespace EventFeed.AspNetCore
         {
             var content = new BadRequestContent
             {
-                message = message,
-                _links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages))
+                Message = message,
+                Links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages))
             };
             context.Response.StatusCode = 400;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(content));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(content, BadRequestContentSerializerContext.Default.BadRequestContent));
         }
 
         private async Task MetaPageResponse(HttpContext context, string basePath, long eventCount, int eventsPerPage, int totalPages)
@@ -213,7 +234,7 @@ namespace EventFeed.AspNetCore
             var links = new MetaLinks(basePath, head, tail);
             var content = new PageMeta(eventCount, eventsPerPage, totalPages, links);
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(content));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(content, PageMetaSerializerContext.Default.PageMeta));
         }
 
         private static bool IsMissingPageNumber(string[] segments)

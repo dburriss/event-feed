@@ -9,6 +9,8 @@ namespace EventFeed.AspNet.Tests.Integration
 {
     public class PageMetaTests
     {
+        private readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
         [Fact]
         public async Task Meta_endpoint_is_available()
         {
@@ -33,7 +35,7 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.Build();
 
             var response = await host.GetTestClient().GetAsync("/api/event-feed");
-            var pageMeta = JsonSerializer.Deserialize<PageMeta>(await response.Content.ReadAsStringAsync());
+            var pageMeta = JsonSerializer.Deserialize<PageMeta>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
             Assert.Equal(0, pageMeta.EventCount);
             Assert.Equal(1, pageMeta.Pages);
         }
@@ -44,8 +46,8 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.Build();
 
             var response = await host.GetTestClient().GetAsync("/api/event-feed");
-            var pageMeta = JsonSerializer.Deserialize<PageMeta>(await response.Content.ReadAsStringAsync());
-            Assert.Equal(pageMeta._links._head, pageMeta._links._tail);
+            var pageMeta = JsonSerializer.Deserialize<PageMeta>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
+            Assert.Equal(pageMeta.Links.Head, pageMeta.Links.Tail);
         }
     }
 }
