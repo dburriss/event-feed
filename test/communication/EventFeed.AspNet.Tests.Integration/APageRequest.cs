@@ -55,7 +55,7 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.Build();
             var page = 1;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{page}");
-            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync();, _jsonSerializerOptions);
+            var pageMeta = JsonSerializer.Deserialize<EventFeedPage>(await response.Content.ReadAsStringAsync(), _jsonSerializerOptions);
             Assert.Equal(page, pageMeta.Page);
             Assert.Empty(pageMeta.Events);
         }
