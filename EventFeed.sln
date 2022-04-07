@@ -27,9 +27,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventFeed.AspNetCore", "src
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "service-collection-example", "service-collection-example", "{0A39541F-22F9-4C93-AD70-E2107160BCA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventFeed.Example1.Api", "examples\service-collection-example\EventFeed.Example1.Api\EventFeed.Example1.Api.csproj", "{E8F392A5-8EE4-4F07-8CFA-66A7F6722F1F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventFeed.Example1.Api", "examples\service-collection-example\EventFeed.Example1.Api\EventFeed.Example1.Api.csproj", "{E8F392A5-8EE4-4F07-8CFA-66A7F6722F1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventFeed.AspNet.Tests.Integration", "test\communication\EventFeed.AspNet.Tests.Integration\EventFeed.AspNet.Tests.Integration.csproj", "{55A22490-871E-4FA8-8445-C220039C0264}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventFeed.AspNet.Tests.Integration", "test\communication\EventFeed.AspNet.Tests.Integration\EventFeed.AspNet.Tests.Integration.csproj", "{55A22490-871E-4FA8-8445-C220039C0264}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "EventFeed.Producer.Caching", "src\EventFeed.Producer.Caching\EventFeed.Producer.Caching.fsproj", "{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,6 +127,18 @@ Global
 		{55A22490-871E-4FA8-8445-C220039C0264}.Release|x64.Build.0 = Release|Any CPU
 		{55A22490-871E-4FA8-8445-C220039C0264}.Release|x86.ActiveCfg = Release|Any CPU
 		{55A22490-871E-4FA8-8445-C220039C0264}.Release|x86.Build.0 = Release|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Debug|x64.Build.0 = Debug|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Debug|x86.Build.0 = Debug|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Release|x64.ActiveCfg = Release|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Release|x64.Build.0 = Release|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Release|x86.ActiveCfg = Release|Any CPU
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +155,7 @@ Global
 		{0A39541F-22F9-4C93-AD70-E2107160BCA9} = {B80375BB-C008-435D-A577-66929227405F}
 		{E8F392A5-8EE4-4F07-8CFA-66A7F6722F1F} = {0A39541F-22F9-4C93-AD70-E2107160BCA9}
 		{55A22490-871E-4FA8-8445-C220039C0264} = {46672673-3CFB-4427-8768-55C53A67D70B}
+		{40DBC8E2-4489-45EC-B80C-C35DA9A3F97F} = {55F7DA4A-F2BD-4AA1-BAC9-44BFD3A0F1FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ACE5B101-1C4B-4CD7-B6E4-EFC298AAC681}
