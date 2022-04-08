@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using EventFeed.Producer.Abstractions;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using EventFeed.AspNetCore.Serialization;
 
@@ -93,6 +92,12 @@ namespace EventFeed.AspNetCore
 
     public class BadRequestContent
     {
+        public BadRequestContent(string message, MetaLinks links) 
+        {
+            Message = message;
+            Links = links;
+        }
+
         [JsonPropertyName("message")]
         public string Message { get; set; }
         [JsonPropertyName("_links")]
@@ -135,8 +140,7 @@ namespace EventFeed.AspNetCore
                 else
                 {
                     string pageNumberString = FindPageNumberSegment(segments);
-                    var pageNumber = 1;
-                    if (int.TryParse(pageNumberString, out pageNumber))
+                    if (int.TryParse(pageNumberString, out var pageNumber))
                     {
                         if(pageNumber > totalPages)
                         {
@@ -171,7 +175,7 @@ namespace EventFeed.AspNetCore
             var isComplete = events.Length == eventsPerPage;
             var content = new EventFeedPage(pageNumber, events, links, isComplete);
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(content, EventFeedPageSerializerContext.Default.EventFeedPage));
+            await context.Response.WriteAsync(EventFeedPageSerializerContext.Serialize(content));
         }
 
         private static string PreviousLink(string basePath, int pageNumber)
@@ -217,14 +221,11 @@ namespace EventFeed.AspNetCore
 
         private static async Task BadRequest(HttpContext context, string basePath, int totalPages, string message)
         {
-            var content = new BadRequestContent
-            {
-                Message = message,
-                Links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages))
-            };
+            var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages));
+            var content = new BadRequestContent(message, links);
             context.Response.StatusCode = 400;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(content, BadRequestContentSerializerContext.Default.BadRequestContent));
+            await context.Response.WriteAsync(BadRequestContentSerializerContext.Serialize(content));
         }
 
         private async Task MetaPageResponse(HttpContext context, string basePath, long eventCount, int eventsPerPage, int totalPages)
@@ -234,7 +235,7 @@ namespace EventFeed.AspNetCore
             var links = new MetaLinks(basePath, head, tail);
             var content = new PageMeta(eventCount, eventsPerPage, totalPages, links);
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonSerializer.Serialize(content, PageMetaSerializerContext.Default.PageMeta));
+            await context.Response.WriteAsync(PageMetaSerializerContext.Serialize(content));
         }
 
         private static bool IsMissingPageNumber(string[] segments)
@@ -254,14 +255,15 @@ namespace EventFeed.AspNetCore
 
         private static bool IsEventFeedMetaRequest(HttpContext context, string path)
         {
-            var pathsMatch = (context?.Request.Path == PathString.FromUriComponent(path)) || (context?.Request.Path == PathString.FromUriComponent(path + "/"));
+            var pathsMatch = (context.Request.Path == PathString.FromUriComponent(path)) || (context.Request.Path == PathString.FromUriComponent(path + "/"));
             return IsGetRequest(context) && pathsMatch;
         }
+
         private static bool IsPageRequest(HttpContext context, string basePath)
         {
             var pagePath = basePath + "/page";
-            var isPage = context?.Request.Path.StartsWithSegments(pagePath);
-            return IsGetRequest(context) && (isPage ?? false);
+            var isPage = context.Request.Path.StartsWithSegments(pagePath);
+            return IsGetRequest(context) && isPage;
         }
 
         private static bool IsGetRequest(HttpContext context)
