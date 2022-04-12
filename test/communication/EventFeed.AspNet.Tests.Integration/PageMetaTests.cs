@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Xunit;
 using EventFeed.AspNetCore;
 using System.Text.Json;
+using EventFeed.AspNetCore.Serialization;
 
 namespace EventFeed.AspNet.Tests.Integration
 {
@@ -33,8 +34,8 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.Build();
 
             var response = await host.GetTestClient().GetAsync("/api/event-feed");
-            var pageMeta = JsonSerializer.Deserialize<PageMeta>(await response.Content.ReadAsStringAsync());
-            Assert.Equal(0, pageMeta.EventCount);
+            var pageMeta = PageMetaSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
+            Assert.Equal(0, pageMeta!.EventCount);
             Assert.Equal(1, pageMeta.Pages);
         }
 
@@ -44,8 +45,8 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.Build();
 
             var response = await host.GetTestClient().GetAsync("/api/event-feed");
-            var pageMeta = JsonSerializer.Deserialize<PageMeta>(await response.Content.ReadAsStringAsync());
-            Assert.Equal(pageMeta._links._head, pageMeta._links._tail);
+            var pageMeta = PageMetaSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
+            Assert.Equal(pageMeta!.Links.Head, pageMeta.Links.Tail);
         }
     }
 }
