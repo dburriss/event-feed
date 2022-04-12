@@ -6,12 +6,12 @@ open Microsoft.Extensions.Caching.Memory
 open System
 
 /// Provides an in-memory caching layer that wraps an IEventFeedReader
-type CachingEventFeedReader(underlyingReader : IEventFeedReader, cache : IMemoryCache) =
+type CachingEventFeedReader(innerReader : IEventFeedReader, cache : IMemoryCache) =
     static let completePageExpirationTime = TimeSpan.FromMinutes(5)
     static let lastPageExpirationTime = TimeSpan.FromSeconds(1)
     
     let isLastPage (pageNumber : int) =
-        let eventNumbers = underlyingReader.EventNumbers()
+        let eventNumbers = innerReader.EventNumbers()
         let totalPages = Paging.totalPages eventNumbers.EventCount eventNumbers.EventsPerPage
         pageNumber = totalPages
 
@@ -23,14 +23,13 @@ type CachingEventFeedReader(underlyingReader : IEventFeedReader, cache : IMemory
 
     interface IEventFeedReader with
 
-        member this.EventNumbers() = underlyingReader.EventNumbers()
+        member this.EventNumbers() = innerReader.EventNumbers()
 
         member this.ReadPage pageNumber =
-            match cache.Get(pageNumber) with
-            | :? seq<FeedEvent> as entry -> entry
+            match cache.Get<seq<FeedEvent>>(pageNumber) with
             | null ->
-                let page = underlyingReader.ReadPage(pageNumber)
+                let page = innerReader.ReadPage(pageNumber)
                 cache.Set(pageNumber, page, getCacheEntryOptions(pageNumber))
-            | _ -> failwith("Unexpected cache response")
+            | entry -> entry
 
-        member this.Dispose() = underlyingReader.Dispose()
+        member this.Dispose() = innerReader.Dispose()
