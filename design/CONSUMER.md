@@ -9,3 +9,27 @@ Things to consider:
 - mapping events to new data/actions
 
 This library should not try to do too much but focus on tools to make it easier to fetch events and action on them.
+
+## How
+
+```mermaid
+sequenceDiagram
+    participant C as Consumer
+    participant S as Consumer State
+    participant P as Producer
+    C->>+P: Fetch meta data
+    P-->>-C: Return meta data
+    
+    loop Until consumer is shut down
+        C->>+S: Fetch last stored page
+        S-->>-C: (Last seen page) OR nothing
+        C->>+P: Request page of events
+        P-->-C: Page of events
+        C-->>+S: Save intents of events
+        C-->>S: Save last seen page
+        S->>-C: Confirmed
+        C->>C: Process unprocessed intents
+    end
+```
+
+The word [intents](https://devonburriss.me/reliability-with-intents/) here refers to the data needed to indicate to a machine what it should do with this event. This could be a **command**. Typically, these would be processed using an [Outbox pattern](https://microservices.io/patterns/data/transactional-outbox.html).
