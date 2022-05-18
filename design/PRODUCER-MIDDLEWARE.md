@@ -14,8 +14,8 @@ The producer is responsible for:
  ```mermaid
 sequenceDiagram
 
-    database DB as Event Data Store
-    database S as Consumer Cache
+    participant DB as Event Data Store
+    participant S as Producer Cache
     participant P as Producer
     participant C as Consumer
 
