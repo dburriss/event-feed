@@ -42,9 +42,9 @@ namespace EventFeed.AspNet.Tests.Integration
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{nonExistentPage}");
             
             var badRequest = BadRequestContentSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Equal("/api/event-feed", badRequest!.Links.Meta);
-            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Head);
-            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Tail);
+            Assert.Equal("/api/event-feed", badRequest!.Links.Meta.Href);
+            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Head.Href);
+            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Tail.Href);
         }
 
         [Fact]

@@ -7,21 +7,49 @@ using EventFeed.AspNetCore.Serialization;
 
 namespace EventFeed.AspNetCore
 {
+    public class Link
+    {
+        public Link(string href)
+        {
+            Href = href;
+        }
+
+        [JsonPropertyName("href")]
+        public string Href { get; private set; }
+
+        public override bool Equals(object? obj)
+        {
+            return obj switch
+            {
+                Link other => this.Href == other.Href,
+                string otherHref => this.Href == otherHref,
+                null => false,
+                _ => false
+            };
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Href);
+        }
+
+        public static implicit operator Link(string href) => new Link(href);
+    }
     public class MetaLinks
     {
-        public MetaLinks(string meta, string head, string tail)
+        public MetaLinks(Link meta, Link head, Link tail)
         {
             Meta = meta;
             Head = head;
             Tail = tail;
         }
 
-        [JsonPropertyName("_meta")]
-        public string Meta { get; private set; }
-        [JsonPropertyName("_head")]
-        public string Head { get; private set; }
-        [JsonPropertyName("_tail")]
-        public string Tail { get; private set; }
+        [JsonPropertyName("meta")]
+        public Link Meta { get; private set; }
+        [JsonPropertyName("head")]
+        public Link Head { get; private set; }
+        [JsonPropertyName("tail")]
+        public Link Tail { get; private set; }
     }
 
     public class Links
@@ -36,17 +64,17 @@ namespace EventFeed.AspNetCore
             Tail = tail;
         }
 
-        [JsonPropertyName("_meta")]
+        [JsonPropertyName("meta")]
         public string Meta { get; private set; }
-        [JsonPropertyName("_head")]
+        [JsonPropertyName("head")]
         public string Head { get; private set; }
-        [JsonPropertyName("_previous")]
+        [JsonPropertyName("previous")]
         public string Previous { get; private set; }
-        [JsonPropertyName("_self")]
+        [JsonPropertyName("self")]
         public string Self { get; private set; }
-        [JsonPropertyName("_next")]
+        [JsonPropertyName("next")]
         public string Next { get; private set; }
-        [JsonPropertyName("_tail")]
+        [JsonPropertyName("tail")]
         public string Tail { get; private set; }
     }
 
