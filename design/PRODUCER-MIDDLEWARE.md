@@ -38,5 +38,6 @@ sequenceDiagram
         end
     end
     P -->>- C: Return page
+    P ->> DB: Update meta data (background)
 ```
 
