@@ -4,7 +4,7 @@ EventFeed is an opinionated way of eventing in your application. All events are 
 
 ## Why would I use this?
 
-Firstly, the persistence mechanism can be used to easily setup an Outbox pattern for resilient collaboration with other infrastructure like a message queue or another server.
+If you are already using a T-SQL database and a .NET Core web API, you can get messaging without any additional infrastructure. The messages are durable, and "sending" them does not suffer from the [classic problem of loosing messages after saving state](https://devonburriss.me/reliability-with-intents/).
 
 ## Components
 
