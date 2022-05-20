@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Events.fs" />
     <Compile Include="MSSQLEventFeedReader.fs" />
+    <Compile Include="EventFeedOptionsBuilderExtensions.fs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EventFeed.AspNetCore\EventFeed.AspNetCore.csproj" />
     <ProjectReference Include="..\EventFeed\EventFeed.fsproj" />
   </ItemGroup>
 
