@@ -54,7 +54,7 @@ namespace EventFeed.AspNet.Tests.Integration
             var pageNumber = 1;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{pageNumber}");
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Equal(pageNumber, page!.Page);
+            Assert.Equal(pageNumber, page!.PageNumber);
             Assert.Empty(page.Events);
         }
 
@@ -75,7 +75,7 @@ namespace EventFeed.AspNet.Tests.Integration
             var pageNumber = 1;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{pageNumber}");
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Empty(page!.Links.Next);
+            Assert.Empty(page!.Links.Next.Href);
         }
 
         [Fact]
@@ -85,7 +85,7 @@ namespace EventFeed.AspNet.Tests.Integration
             var pageNumber = 1;
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{pageNumber}");
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Empty(page!.Links.Previous);
+            Assert.Empty(page!.Links.Previous.Href);
         }
 
         [Fact]
