@@ -9,13 +9,17 @@ namespace EventFeed.AspNetCore
 {
     public class Link
     {
-        public Link(string href)
+        public Link(string href, bool templated = false)
         {
             Href = href;
+            Templated = templated;
         }
 
         [JsonPropertyName("href")]
         public string Href { get; private set; }
+
+        [JsonPropertyName("templated")]
+        public bool Templated { get; private set; }
 
         public override bool Equals(object? obj)
         {
