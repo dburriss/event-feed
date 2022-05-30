@@ -38,16 +38,13 @@ namespace EventFeed.AspNet.Tests.Integration
         }
 
         [Fact]
-        public async Task With_bad_request_returns_links()
+        public async Task With_invalid_page_number_returns_problemdetails()
         {
             using var host = await A.Host.Build();
-            var nonExistentPage = 2;
-            var response = await host.GetTestClient().GetAsync(pageUrl(nonExistentPage));
+            var response = await host.GetTestClient().GetAsync("/api/event-feed/pages/notanumber");
             
-            var badRequest = BadRequestContentSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Equal("/api/event-feed", badRequest!.Links.Meta.Href);
-            Assert.Equal("/api/event-feed/pages/1", badRequest.Links.Head.Href);
-            Assert.Equal("/api/event-feed/pages/1", badRequest.Links.Tail.Href);
+            var problemDetails = ProblemDetailsSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
+            Assert.Equal("Bad request", problemDetails!.Title);
         }
 
         [Fact]

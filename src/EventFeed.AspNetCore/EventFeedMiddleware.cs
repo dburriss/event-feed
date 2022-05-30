@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using EventFeed.Producer.Abstractions;
 using System.Text.Json.Serialization;
 using EventFeed.AspNetCore.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EventFeed.AspNetCore
 {
@@ -188,7 +189,7 @@ namespace EventFeed.AspNetCore
                         {
                             if (pageNumber > totalPages)
                             {
-                                await UnknownPageRequest(context, basePath, totalPages, $"Page {pageNumber} is greater than the current total number of pages {totalPages}.");
+                                await UnknownPageRequest(context, $"Page {pageNumber} is greater than the current total number of pages {totalPages}.");
                             }
                             else
                             {
@@ -197,13 +198,13 @@ namespace EventFeed.AspNetCore
                         }
                         else
                         {
-                            await BadRequest(context, basePath, totalPages, $"{pageNumberString} is not a valid page.");
+                            await BadRequest(context, $"{pageNumberString} is not a valid page number.");
                         }
                     }
                 }
                 else
                 {
-                    await BadRequest(context, basePath, totalPages, $"Unknown resource.");
+                    await BadRequest(context, $"Unknown resource.");
                 }
             }
             else
@@ -281,22 +282,35 @@ namespace EventFeed.AspNetCore
             context.Response.Headers["Location"] = $"{basePath}/pages/1";
         }
 
-        private static async Task UnknownPageRequest(HttpContext context, string basePath, int totalPages, string message)
+        private static async Task UnknownPageRequest(HttpContext context, string message)
         {
-            var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages), PageLink(basePath));
-            var content = new BadRequestContent(message, links);
+            var problemDetails = new ProblemDetails()
+            {
+                Title = "Unknown page requested",
+                Detail = message,
+                Instance = context.Request.Path,
+                Status = 404,
+                Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+            };
             context.Response.StatusCode = 404;
-            context.Response.ContentType = "application/hal+json";
-            await context.Response.WriteAsync(BadRequestContentSerializerContext.Serialize(content));
+            context.Response.ContentType = "application/problem+json";
+            await context.Response.WriteAsync(ProblemDetailsSerializerContext.Serialize(problemDetails));
         }
 
-        private static async Task BadRequest(HttpContext context, string basePath, int totalPages, string message)
+        private static async Task BadRequest(HttpContext context, string message)
         {
-            var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages), PageLink(basePath));
-            var content = new BadRequestContent(message, links);
-            context.Response.StatusCode = 400;
-            context.Response.ContentType = "application/hal+json";
-            await context.Response.WriteAsync(BadRequestContentSerializerContext.Serialize(content));
+            var status = 400;
+            var problemDetails = new ProblemDetails()
+            {
+                Title = "Bad request",
+                Detail = message,
+                Instance = context.Request.Path,
+                Status = status,
+                Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400"
+            };
+            context.Response.StatusCode = status;
+            context.Response.ContentType = "application/problem+json";
+            await context.Response.WriteAsync(ProblemDetailsSerializerContext.Serialize(problemDetails));
         }
 
         private async Task MetaPageResponse(HttpContext context, string basePath, long eventCount, int eventsPerPage, int totalPages)
