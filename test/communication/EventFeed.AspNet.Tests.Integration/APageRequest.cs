@@ -21,20 +21,20 @@ namespace EventFeed.AspNet.Tests.Integration
         }
 
         [Fact]
-        public async Task With_no_page_return_400()
+        public async Task With_no_page_return_307_temporary_redirect()
         {
             using var host = await A.Host.Build();
             var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/");
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(HttpStatusCode.TemporaryRedirect, response.StatusCode);
         }
 
         [Fact]
-        public async Task With_no_events_page_2_return_400()
+        public async Task With_no_events_page_2_return_404()
         {
             using var host = await A.Host.Build();
             var nonExistentPage = 2;
             var response = await host.GetTestClient().GetAsync(pageUrl(nonExistentPage));
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
         [Fact]

@@ -173,7 +173,7 @@ namespace EventFeed.AspNetCore
                 var segments = GetSegments(context);
                 if (IsMissingPageNumber(segments))
                 {
-                    await BadRequest(context, basePath, totalPages, "No `page` number supplied.");
+                    RedirectToFirstPage(context, basePath, totalPages);
                 }
                 else
                 {
@@ -182,7 +182,7 @@ namespace EventFeed.AspNetCore
                     {
                         if(pageNumber > totalPages)
                         {
-                            await BadRequest(context, basePath, totalPages, $"Page {pageNumber} is greater than the current total number of pages {totalPages}.");
+                            await UnknownPageRequest(context, basePath, totalPages, $"Page {pageNumber} is greater than the current total number of pages {totalPages}.");
                         }
                         else
                         {
@@ -213,7 +213,7 @@ namespace EventFeed.AspNetCore
             var links = new Links(basePath, headLink, previousLink, selfLink, nextLink, tailLink, pageLink);
             var isComplete = events.Length == eventsPerPage;
             var content = new EventFeedPage(pageNumber, events, links, isComplete);
-            context.Response.ContentType = "application/json";
+            context.Response.ContentType = "application/hal+json";
             await context.Response.WriteAsync(EventFeedPageSerializerContext.Serialize(content));
         }
 
@@ -263,12 +263,28 @@ namespace EventFeed.AspNetCore
             return context.Request.Path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
         }
 
+        private static void RedirectToFirstPage(HttpContext context, string basePath, int totalPages)
+        {
+            var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages), PageLink(basePath));
+            context.Response.StatusCode = 307;
+            context.Response.Headers["Location"] = $"{basePath}/page/1";
+        }
+
+        private static async Task UnknownPageRequest(HttpContext context, string basePath, int totalPages, string message)
+        {
+            var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages), PageLink(basePath));
+            var content = new BadRequestContent(message, links);
+            context.Response.StatusCode = 404;
+            context.Response.ContentType = "application/hal+json";
+            await context.Response.WriteAsync(BadRequestContentSerializerContext.Serialize(content));
+        }
+
         private static async Task BadRequest(HttpContext context, string basePath, int totalPages, string message)
         {
             var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages), PageLink(basePath));
             var content = new BadRequestContent(message, links);
             context.Response.StatusCode = 400;
-            context.Response.ContentType = "application/json";
+            context.Response.ContentType = "application/hal+json";
             await context.Response.WriteAsync(BadRequestContentSerializerContext.Serialize(content));
         }
 
@@ -279,7 +295,7 @@ namespace EventFeed.AspNetCore
             var page = PageLink(basePath);
             var links = new MetaLinks(basePath, head, tail, page);
             var content = new PageMeta(eventCount, eventsPerPage, totalPages, links);
-            context.Response.ContentType = "application/json";
+            context.Response.ContentType = "application/hal+json";
             await context.Response.WriteAsync(PageMetaSerializerContext.Serialize(content));
         }
 
