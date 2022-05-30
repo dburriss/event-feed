@@ -164,35 +164,42 @@ namespace EventFeed.AspNetCore
             var totalPages = Paging.TotalPages(eventCount, eventsPerPage);
             // TODO: check registered
             // TODO: write metrics
-            if (IsEventFeedMetaRequest(context, basePath))
+            if(IsEventFeedRequest(context, basePath))
             {
-                await MetaPageResponse(context, basePath, eventCount, eventsPerPage, totalPages);
-            }
-            else if (IsPageRequest(context, basePath))
-            {
-                var segments = GetSegments(context);
-                if (IsMissingPageNumber(segments))
+                if (IsEventFeedMetaRequest(context, basePath))
                 {
-                    RedirectToFirstPage(context, basePath, totalPages);
+                    await MetaPageResponse(context, basePath, eventCount, eventsPerPage, totalPages);
                 }
-                else
+                else if (IsPageRequest(context, basePath))
                 {
-                    string pageNumberString = FindPageNumberSegment(segments);
-                    if (int.TryParse(pageNumberString, out var pageNumber))
+                    var segments = GetSegments(context);
+                    if (IsMissingPageNumber(segments))
                     {
-                        if(pageNumber > totalPages)
-                        {
-                            await UnknownPageRequest(context, basePath, totalPages, $"Page {pageNumber} is greater than the current total number of pages {totalPages}.");
-                        }
-                        else
-                        {
-                            await EventFeedPage(context, basePath, eventsPerPage, totalPages, pageNumber);
-                        }
+                        RedirectToFirstPage(context, basePath, totalPages);
                     }
                     else
                     {
-                        await BadRequest(context, basePath, totalPages, $"{pageNumberString} is not a valid page.");
+                        string pageNumberString = FindPageNumberSegment(segments);
+                        if (int.TryParse(pageNumberString, out var pageNumber))
+                        {
+                            if (pageNumber > totalPages)
+                            {
+                                await UnknownPageRequest(context, basePath, totalPages, $"Page {pageNumber} is greater than the current total number of pages {totalPages}.");
+                            }
+                            else
+                            {
+                                await EventFeedPage(context, basePath, eventsPerPage, totalPages, pageNumber);
+                            }
+                        }
+                        else
+                        {
+                            await BadRequest(context, basePath, totalPages, $"{pageNumberString} is not a valid page.");
+                        }
                     }
+                }
+                else
+                {
+                    await BadRequest(context, basePath, totalPages, $"Unknown resource.");
                 }
             }
             else
@@ -221,7 +228,7 @@ namespace EventFeed.AspNetCore
         {
             if(pageNumber > 1)
             {
-                return $"{basePath}/page/{pageNumber - 1}";
+                return $"{basePath}/pages/{pageNumber - 1}";
             }
             else
             {
@@ -231,7 +238,7 @@ namespace EventFeed.AspNetCore
 
         private static Link SelfLink(string basePath, int pageNumber)
         {
-            return $"{basePath}/page/{pageNumber}";
+            return $"{basePath}/pages/{pageNumber}";
         }
 
         private static Link NextLink(string basePath, int pageNumber, int totalPages)
@@ -239,7 +246,7 @@ namespace EventFeed.AspNetCore
             var nextPage = pageNumber + 1;
             if(nextPage <= totalPages)
             {
-                return $"{basePath}/page/{nextPage}";
+                return $"{basePath}/pages/{nextPage}";
             }
             else
             {
@@ -249,7 +256,7 @@ namespace EventFeed.AspNetCore
 
         private static Link PageLink(string basePath)
         {
-            return new Link("{basePath}/page/{pageNumber}", true);
+            return new Link("{basePath}/pages/{pageNumber}", true);
         }
 
         private static string FindPageNumberSegment(string[] segments)
@@ -267,7 +274,7 @@ namespace EventFeed.AspNetCore
         {
             var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages), PageLink(basePath));
             context.Response.StatusCode = 307;
-            context.Response.Headers["Location"] = $"{basePath}/page/1";
+            context.Response.Headers["Location"] = $"{basePath}/pages/1";
         }
 
         private static async Task UnknownPageRequest(HttpContext context, string basePath, int totalPages, string message)
@@ -301,17 +308,23 @@ namespace EventFeed.AspNetCore
 
         private static bool IsMissingPageNumber(string[] segments)
         {
-            return segments.Length < 4;
+            return  segments.Length < 4;
         }
 
         private static Link HeadLink(string basePath)
         {
-            return $"{basePath}/page/1";
+            return $"{basePath}/pages/1";
         }
 
         private static Link TailLink(string basePath, int totalPages)
         {
-            return $"{basePath}/page/{totalPages}";
+            return $"{basePath}/pages/{totalPages}";
+        }
+
+        private static bool IsEventFeedRequest(HttpContext context, string path)
+        {
+            var pathsMatch = (context.Request.Path.StartsWithSegments(path));
+            return IsGetRequest(context) && pathsMatch;
         }
 
         private static bool IsEventFeedMetaRequest(HttpContext context, string path)
@@ -322,7 +335,7 @@ namespace EventFeed.AspNetCore
 
         private static bool IsPageRequest(HttpContext context, string basePath)
         {
-            var pagePath = basePath + "/page";
+            var pagePath = basePath + "/pages";
             var isPage = context.Request.Path.StartsWithSegments(pagePath);
             return IsGetRequest(context) && isPage;
         }

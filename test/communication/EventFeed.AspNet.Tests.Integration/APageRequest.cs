@@ -9,7 +9,7 @@ namespace EventFeed.AspNet.Tests.Integration
 {
     public class APageRequest
     {
-        Func<int, string> pageUrl = page => $"/api/event-feed/page/{page}";
+        Func<int, string> pageUrl = page => $"/api/event-feed/pages/{page}";
 
         [Fact]
         public async Task With_no_events_head_is_reachable()
@@ -24,7 +24,7 @@ namespace EventFeed.AspNet.Tests.Integration
         public async Task With_no_page_return_307_temporary_redirect()
         {
             using var host = await A.Host.Build();
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/");
+            var response = await host.GetTestClient().GetAsync($"/api/event-feed/pages/");
             Assert.Equal(HttpStatusCode.TemporaryRedirect, response.StatusCode);
         }
 
@@ -46,8 +46,8 @@ namespace EventFeed.AspNet.Tests.Integration
             
             var badRequest = BadRequestContentSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
             Assert.Equal("/api/event-feed", badRequest!.Links.Meta.Href);
-            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Head.Href);
-            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Tail.Href);
+            Assert.Equal("/api/event-feed/pages/1", badRequest.Links.Head.Href);
+            Assert.Equal("/api/event-feed/pages/1", badRequest.Links.Tail.Href);
         }
 
         [Fact]
@@ -97,7 +97,7 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(20).Build();
             var response = await host.GetTestClient().GetAsync(pageUrl(2));
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Equal("/api/event-feed/page/1", page!.Links.Previous);
+            Assert.Equal("/api/event-feed/pages/1", page!.Links.Previous);
         }
 
         [Fact]
