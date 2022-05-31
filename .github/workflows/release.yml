@@ -28,7 +28,7 @@ jobs:
 
     # Run dotnet pack to create the nupkg file for the project and store in artifacts folder
     - name: Run Pack on EventFeed
-      run: dotnet pack src/EventFeed/EventFeed.csproj -o ./artifacts --configuration ${{ env.config }}
+      run: dotnet pack src/EventFeed/EventFeed.fsproj -o ./artifacts --configuration ${{ env.config }}
       shell: bash
 
     - name: Run Pack on EventFeed.Producer.MSSQL
