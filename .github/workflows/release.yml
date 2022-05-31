@@ -42,6 +42,7 @@ jobs:
     # Find all the created nupkg files and publish it to NuGet, we use the wonderful swiss-army knife capability `find -exec` to find and then execute an action on it.
     # NUGET_DEPLOY_KEY is the NuGet API key stored in the repo GH action secrets
     # If you also publish symbol packages, find the snupkg files and publish it to NuGet
+    # One problem with this approach is failures to publish to not fail the workflow :/
     - name: Publish to NuGet
       run: |
         find . -name '*.nupkg' -exec dotnet nuget push "{}" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_DEPLOY_KEY }} --skip-duplicate \;
