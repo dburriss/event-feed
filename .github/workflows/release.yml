@@ -32,7 +32,7 @@ jobs:
       shell: bash
 
     - name: Run Pack on EventFeed.Producer.MSSQL
-      run: dotnet pack src/EventFeed.Producer.MSSQL/EventFeed.Producer.MSSQL.csproj -o ./artifacts --configuration ${{ env.config }}
+      run: dotnet pack src/EventFeed.Producer.MSSQL/EventFeed.Producer.MSSQL.fsproj -o ./artifacts --configuration ${{ env.config }}
       shell: bash
 
     - name: Run Pack on EventFeed.AspNetCore
