@@ -1,19 +1,19 @@
-﻿using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Hosting;
-using EventFeed;
-using EventFeed.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+﻿using EventFeed.AspNetCore;
 using EventFeed.Testing;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System;
 
 namespace EventFeed.AspNet.Tests.Integration
 {
     internal class AHostBuilder
     {
         private int _eventsPerPage = 100;
-        private List<FeedEvent> events = new List<FeedEvent>();
+        private List<FeedEvent> _events = new List<FeedEvent>();
 
         public AHostBuilder SetEventsPerPage(int eventsPerPage)
         {
@@ -23,7 +23,7 @@ namespace EventFeed.AspNet.Tests.Integration
 
         public AHostBuilder With(params FeedEvent[] events)
         {
-            this.events.AddRange(events);
+            this._events.AddRange(events);
             return this;
         }
         public AHostBuilder WithRandomEvents(int eventsToCreate)
@@ -35,7 +35,7 @@ namespace EventFeed.AspNet.Tests.Integration
                     eventName: "test-event",
                     eventSchemaVersion: 1,
                     payload: "{ clicked: true }",
-                    sequenceNumber: events.Count + 1,
+                    sequenceNumber: _events.Count + 1,
                     spanId: Telemetry.getSpanId().ToString(),
                     createdAt: DateTimeOffset.UtcNow,
                     traceId: Telemetry.getTraceId().ToString()
@@ -48,16 +48,14 @@ namespace EventFeed.AspNet.Tests.Integration
         public Task<IHost> Build()
         {
             return new HostBuilder()
-                .ConfigureWebHost(webBuilder =>
-                {
+                .ConfigureWebHost(webBuilder => {
                     webBuilder
                         .UseTestServer()
-                        .ConfigureServices(services =>
-                        {
-                            services.AddEventFeed(_ => new InMemoryEventFeedReader(_eventsPerPage, events));
+                        .ConfigureServices(services => {
+                            services.AddMemoryCache();
+                            services.AddEventFeed(options => options.UseReader(new InMemoryEventFeedReader(_eventsPerPage, _events)));
                         })
-                        .Configure(app =>
-                        {
+                        .Configure(app => {
                             app.UseEventFeed();
                         });
                 })

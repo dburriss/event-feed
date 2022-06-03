@@ -24,8 +24,9 @@
 		<PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.2.2" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\EventFeed\EventFeed.fsproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EventFeed.Producer.Caching\EventFeed.Producer.Caching.fsproj" />
+    <ProjectReference Include="..\EventFeed\EventFeed.fsproj" />
+  </ItemGroup>
 
 </Project>

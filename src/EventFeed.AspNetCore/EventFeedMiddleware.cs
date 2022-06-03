@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Http;
 using EventFeed.Producer.Abstractions;
 using System.Text.Json.Serialization;
 using EventFeed.AspNetCore.Serialization;
 
-namespace EventFeed.AspNetCore
-{
+namespace EventFeed.AspNetCore {
     public class MetaLinks
     {
         public MetaLinks(string meta, string head, string tail)
@@ -269,24 +266,6 @@ namespace EventFeed.AspNetCore
         private static bool IsGetRequest(HttpContext context)
         {
             return context?.Request.Method.ToUpper() == "GET";
-        }
-    }
-
-    public static class EventFeedMiddlewareExtensions
-    {
-        public static IApplicationBuilder UseEventFeed(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<EventFeedMiddleware>();
-        }
-    }
-
-    public static class EventFeedServicesExtensions
-    {
-        public static IServiceCollection AddEventFeed(this IServiceCollection serviceCollection, Func<IServiceProvider, IEventFeedReader> factory)
-        {
-            serviceCollection.AddTransient(factory);
-            serviceCollection.AddTransient<EventFeedMiddleware>();
-            return serviceCollection;
         }
     }
 }

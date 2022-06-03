@@ -1,9 +1,8 @@
-﻿namespace EventFeed.MSSQL
+﻿namespace EventFeed.Producer.MSSQL
 
 open EventFeed.Producer.Abstractions
 open Microsoft.Data.SqlClient
 open System.Runtime.InteropServices
-open EventFeed.Producer.MSSQL
 open System.Data.Common
 open System.Data
 
