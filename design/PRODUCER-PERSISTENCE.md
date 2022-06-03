@@ -1,6 +1,27 @@
-# Persistence design
+# Producer Persistence design
 
-This will initially focus around an MS-SQL database as a store. Other stores can be supported in the future. Another consideration is an in-memory store to use for testing.
+This will initially focus around an MS-SQL database as a store. Other stores can be supported in the future. Another consideration is an in-memory store to use for testing. 
+
+The persistence library should just be a helper for storing events within the same transaction as application state is saved.
+
+ ```mermaid
+sequenceDiagram
+
+    participant C as Code
+    participant L as Lib
+    participant DB as Database
+    participant N as Notifications
+
+    C ->>+ DB: Start transaction
+    C ->> DB: Store application state
+    L ->> DB: Save events
+    C ->> DB: Commit transaction
+    DB ->>- C: Transaction succeeded
+    opt
+    L -->> N: Notify
+    end
+
+```
 
 ## Open decisions
 
@@ -13,6 +34,7 @@ This will initially focus around an MS-SQL database as a store. Other stores can
   - [ ] cold storage table
   - [ ] metadata table
   - [ ] stored procs**
+  - [ ] Notifications: A observer/subscriber capability that could be used for cache invalidation and back-channel notification of Consumers via queue/websocket (preference is websocket since no extra infra needed)
 - [ ] A simple function for storing events within a given transaction
 
 ** Stored procs should make usage and using easy but would present a problem from an upgrade point of view. Probably not an issue since anything that would break the stored proc would need to be executed as a script on the DB, which could upgrade the proc too.
@@ -22,7 +44,7 @@ This will initially focus around an MS-SQL database as a store. Other stores can
 When persisting an `Event`, it contains the following data with corresponding types:
 
 | Column             | Data Type          | Description                                                                          |
-|--------------------|--------------------|--------------------------------------------------------------------------------------|
+| ------------------ | ------------------ | ------------------------------------------------------------------------------------ |
 | Id                 | `bigint`           | Autoincrement numeric internal identifier. Should never be shared.                   |
 | EventId            | `uniqueidentifier` | Unique identifier for this specific event                                            |
 | EventName          | `varchar(255)`     | The type of event this is eg. `customer-created`                                     |
@@ -31,6 +53,7 @@ When persisting an `Event`, it contains the following data with corresponding ty
 | SpanId             | `char(8)`          | The span identifier. Should be max 8 bytes.                                          |
 | TraceId            | `char(16)`         | The trace identifier. Should be max 16 bytes                                         |
 | CreatedAt          | `datetimeoffset`   | The date and time the event was created in the application                           |
+| Partition          | `varchar(255)`     | Could be used in the future for scaling and aggregates. Default value is`default`    |
 
 In addition to storing the above data, the event table needs additional data to help consumers be sure they are receiving events in the order they were created, and they have not missed any events.
 
@@ -61,7 +84,7 @@ TODO
 - Populate TraceId and SpanId
 
 | Properties         | .NET Type        | Description                                                                   |
-|--------------------|------------------|-------------------------------------------------------------------------------|
+| ------------------ | ---------------- | ----------------------------------------------------------------------------- |
 | EventId            | `Guid`           | Unique identifier for this specific event                                     |
 | EventName          | `string`         | The type of event this is eg. `customer-created`                              |
 | EventSchemaVersion | `int16`          | A version number that increments with changes to the schema                   |
@@ -77,3 +100,4 @@ A nuget package with a basic persistence helper. This should consist of a few fu
 
 - save an event in the same transaction passed to it (via the connection?)
 - retrieve a page of events
+- [Optional] Notify

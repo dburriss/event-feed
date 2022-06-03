@@ -1,15 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Version>0.0.0-alpha</Version>
+		<Authors>Devon Burriss;Robert Massa</Authors>
+		<Copyright>Devon Burriss 2022</Copyright>
+		<PackageTags>messaging;persistent;aspnetcore;middleware</PackageTags>
+		<PackageId>EventFeed.AspNetCore</PackageId>
+		<Title>EventFeed ASP.NET Core Middleware</Title>
+		<Description>The middleware for making an EventFeed Producer available via HTTP endpoint on and ASP.NET Core application. EventFeed allows the publishing of messages to a database in a transaction, avoiding the dual-write problem. The persistent event feed can then be consumed via a HTTP endpoint.</Description>
+		<RepositoryUrl>https://github.com/dburriss/event-feed/</RepositoryUrl>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.2.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\LICENSE" Pack="true" Visible="false" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.2.2" />
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EventFeed.Producer.Caching\EventFeed.Producer.Caching.fsproj" />

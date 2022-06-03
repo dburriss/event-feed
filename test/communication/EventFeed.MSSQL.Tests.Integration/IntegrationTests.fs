@@ -28,6 +28,7 @@ module IntegrationTests =
 
     
     [<Fact>]
+    [<Trait("dep","mssql")>]
     let ``Events in rollback transaction not saved`` () =
 
         let connString = connectionString()
@@ -54,6 +55,7 @@ module IntegrationTests =
     
     
     [<Fact>]
+    [<Trait("dep","mssql")>]
     let ``Events in committed transactionnot are saved`` () =
 
         let connString = connectionString()
@@ -81,6 +83,7 @@ module IntegrationTests =
 
     
     [<Fact>]
+    [<Trait("dep","mssql")>]
     let ``NewEvent persisted to row`` () =
 
         let connString = connectionString()
@@ -113,6 +116,7 @@ module IntegrationTests =
 
 
     [<Fact>]
+    [<Trait("dep","mssql")>]
     // this test assumes data exists
     let ``Paging returns consecutive numbers`` () =
 
@@ -140,6 +144,7 @@ module IntegrationTests =
 
     
     [<Fact>]
+    [<Trait("dep","mssql")>]
     // this test assumes data exists
     let ``EventCount returns a number`` () =
 
