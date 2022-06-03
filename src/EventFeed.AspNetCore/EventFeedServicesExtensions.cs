@@ -1,4 +1,5 @@
-﻿using EventFeed.Producer.Caching;
+﻿using EventFeed.Producer.Abstractions;
+using EventFeed.Producer.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,9 +16,9 @@ namespace EventFeed.AspNetCore
             if (options.CacheEnabled)
             {
                 // wrap the EventFeedReader in a caching layer
-                serviceCollection.AddTransient((provider) => new CachingEventFeedReader(
+                serviceCollection.AddTransient<IEventFeedReader>((provider) => new CachingEventFeedReader(
                     options.EventFeedReader,
-                    provider.GetService<IMemoryCache>(),
+                    provider.GetRequiredService<IMemoryCache>(),
                     options.CacheCompletePageExpirationTime,
                     options.CacheLastPageExpirationTime
                 ));
