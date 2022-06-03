@@ -12,10 +12,15 @@ namespace EventFeed.AspNetCore
             var options = builder.Options;
             optionsBuilder.Invoke(builder);
 
-            if (options.UseCaching)
+            if (options.CacheEnabled)
             {
                 // wrap the EventFeedReader in a caching layer
-                serviceCollection.AddTransient((provider) => new CachingEventFeedReader(options.EventFeedReader, provider.GetService<IMemoryCache>()));
+                serviceCollection.AddTransient((provider) => new CachingEventFeedReader(
+                    options.EventFeedReader,
+                    provider.GetService<IMemoryCache>(),
+                    options.CacheCompletePageExpirationTime,
+                    options.CacheLastPageExpirationTime
+                ));
             }
             else
             {

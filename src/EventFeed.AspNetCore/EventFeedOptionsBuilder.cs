@@ -12,9 +12,9 @@ namespace EventFeed.AspNetCore
             return this;
         }
 
-        public EventFeedOptionsBuilder UseCaching(bool value)
+        public EventFeedOptionsBuilder UseCaching(bool enabled)
         {
-            Options.UseCaching = value;
+            Options.CacheEnabled = enabled;
             return this;
         }
     }
