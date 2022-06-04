@@ -3,48 +3,48 @@ using System.Net;
 using System.Threading.Tasks;
 using Xunit;
 using EventFeed.AspNetCore.Serialization;
+using System;
 
 namespace EventFeed.AspNet.Tests.Integration
 {
     public class APageRequest
     {
+        Func<int, string> pageUrl = page => $"/api/event-feed/pages/{page}";
+
         [Fact]
         public async Task With_no_events_head_is_reachable()
         {
             using var host = await A.Host.Build();
 
-            var response = await host.GetTestClient().GetAsync("/api/event-feed/page/1");
+            var response = await host.GetTestClient().GetAsync(pageUrl(1));
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
         [Fact]
-        public async Task With_no_page_return_400()
+        public async Task With_no_page_return_307_temporary_redirect()
         {
             using var host = await A.Host.Build();
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/");
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var response = await host.GetTestClient().GetAsync($"/api/event-feed/pages/");
+            Assert.Equal(HttpStatusCode.TemporaryRedirect, response.StatusCode);
         }
 
         [Fact]
-        public async Task With_no_events_page_2_return_400()
+        public async Task With_no_events_page_2_return_404()
         {
             using var host = await A.Host.Build();
             var nonExistentPage = 2;
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{nonExistentPage}");
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var response = await host.GetTestClient().GetAsync(pageUrl(nonExistentPage));
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
         [Fact]
-        public async Task With_bad_request_returns_links()
+        public async Task With_invalid_page_number_returns_problemdetails()
         {
             using var host = await A.Host.Build();
-            var nonExistentPage = 2;
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{nonExistentPage}");
+            var response = await host.GetTestClient().GetAsync("/api/event-feed/pages/notanumber");
             
-            var badRequest = BadRequestContentSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Equal("/api/event-feed", badRequest!.Links.Meta);
-            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Head);
-            Assert.Equal("/api/event-feed/page/1", badRequest.Links.Tail);
+            var problemDetails = ProblemDetailsSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
+            Assert.Equal("Bad request", problemDetails!.Title);
         }
 
         [Fact]
@@ -52,9 +52,9 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.Build();
             var pageNumber = 1;
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{pageNumber}");
+            var response = await host.GetTestClient().GetAsync(pageUrl(pageNumber));
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Equal(pageNumber, page!.Page);
+            Assert.Equal(pageNumber, page!.PageNumber);
             Assert.Empty(page.Events);
         }
 
@@ -63,7 +63,7 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(5).Build();
             var pageNumber = 1;
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{pageNumber}");
+            var response = await host.GetTestClient().GetAsync(pageUrl(pageNumber));
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
             Assert.NotEmpty(page!.Events);
         }
@@ -73,9 +73,9 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(5).Build();
             var pageNumber = 1;
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{pageNumber}");
+            var response = await host.GetTestClient().GetAsync(pageUrl(pageNumber));
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Empty(page!.Links.Next);
+            Assert.Empty(page!.Links.Next.Href);
         }
 
         [Fact]
@@ -83,18 +83,18 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(5).Build();
             var pageNumber = 1;
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{pageNumber}");
+            var response = await host.GetTestClient().GetAsync(pageUrl(pageNumber));
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Empty(page!.Links.Previous);
+            Assert.Empty(page!.Links.Previous.Href);
         }
 
         [Fact]
         public async Task On_2nd_page_previous_is_first()
         {
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(20).Build();
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/2");
+            var response = await host.GetTestClient().GetAsync(pageUrl(2));
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Equal("/api/event-feed/page/1", page!.Links.Previous);
+            Assert.Equal("/api/event-feed/pages/1", page!.Links.Previous);
         }
 
         [Fact]
@@ -102,7 +102,7 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(20).Build();
             var pageNumber = 2;
-            var response = await host.GetTestClient().GetAsync($"/api/event-feed/page/{pageNumber}");
+            var response = await host.GetTestClient().GetAsync(pageUrl(pageNumber));
             var page = EventFeedPageSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
             Assert.NotEmpty(page!.Events);
         }
@@ -113,8 +113,8 @@ namespace EventFeed.AspNet.Tests.Integration
             var pageLength = 10;
             var totalEvents = pageLength * 2;
             using var host = await A.Host.SetEventsPerPage(pageLength).WithRandomEvents(totalEvents).Build();
-            var response1 = await host.GetTestClient().GetAsync($"/api/event-feed/page/1");
-            var response2 = await host.GetTestClient().GetAsync($"/api/event-feed/page/2");
+            var response1 = await host.GetTestClient().GetAsync(pageUrl(1));
+            var response2 = await host.GetTestClient().GetAsync(pageUrl(2));
             var page1 = EventFeedPageSerializerContext.Deserialize(await response1.Content.ReadAsStringAsync());
             var page2 = EventFeedPageSerializerContext.Deserialize(await response2.Content.ReadAsStringAsync());
             var pg1FirstEv = page1!.Events[0];

@@ -36,7 +36,7 @@ namespace EventFeed.AspNet.Tests.Integration
             var response = await host.GetTestClient().GetAsync("/api/event-feed");
             var pageMeta = PageMetaSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
             Assert.Equal(0, pageMeta!.EventCount);
-            Assert.Equal(1, pageMeta.Pages);
+            Assert.Equal(1, pageMeta.pageCount);
         }
 
         [Fact]
@@ -46,7 +46,7 @@ namespace EventFeed.AspNet.Tests.Integration
 
             var response = await host.GetTestClient().GetAsync("/api/event-feed");
             var pageMeta = PageMetaSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
-            Assert.Equal(pageMeta!.Links.Head, pageMeta.Links.Tail);
+            Assert.Equal(pageMeta!.Links.Head.Href, pageMeta.Links.Tail.Href);
         }
     }
 }

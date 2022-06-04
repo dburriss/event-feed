@@ -4,29 +4,69 @@ using Microsoft.Extensions.DependencyInjection;
 using EventFeed.Producer.Abstractions;
 using System.Text.Json.Serialization;
 using EventFeed.AspNetCore.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EventFeed.AspNetCore
 {
+    public class Link
+    {
+        public Link(string href, bool templated = false, string? rel = null)
+        {
+            Href = href;
+            Templated = templated;
+            Rel = rel;
+        }
+
+        [JsonPropertyName("href")]
+        public string Href { get; private set; }
+
+        [JsonPropertyName("templated")]
+        public bool Templated { get; private set; }
+
+        [JsonPropertyName("rel")]
+        public string? Rel { get; private set; }
+
+        public override bool Equals(object? obj)
+        {
+            return obj switch
+            {
+                Link other => this.Href == other.Href,
+                string otherHref => this.Href == otherHref,
+                null => false,
+                _ => false
+            };
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Href);
+        }
+
+        public static implicit operator Link(string href) => new Link(href);
+    }
     public class MetaLinks
     {
-        public MetaLinks(string meta, string head, string tail)
+        public MetaLinks(Link meta, Link head, Link tail, Link page)
         {
             Meta = meta;
             Head = head;
             Tail = tail;
+            Page = page;
         }
 
-        [JsonPropertyName("_meta")]
-        public string Meta { get; private set; }
-        [JsonPropertyName("_head")]
-        public string Head { get; private set; }
-        [JsonPropertyName("_tail")]
-        public string Tail { get; private set; }
+        [JsonPropertyName("meta")]
+        public Link Meta { get; private set; }
+        [JsonPropertyName("head")]
+        public Link Head { get; private set; }
+        [JsonPropertyName("tail")]
+        public Link Tail { get; private set; }
+        [JsonPropertyName("page")]
+        public Link Page { get; private set; }
     }
 
     public class Links
     {
-        public Links(string meta, string head, string previous, string self, string next, string tail)
+        public Links(Link meta, Link head, Link previous, Link self, Link next, Link tail, Link page)
         {
             Meta = meta;
             Head = head;
@@ -34,29 +74,32 @@ namespace EventFeed.AspNetCore
             Self = self;
             Next = next;
             Tail = tail;
+            Page = page;
         }
 
-        [JsonPropertyName("_meta")]
-        public string Meta { get; private set; }
-        [JsonPropertyName("_head")]
-        public string Head { get; private set; }
-        [JsonPropertyName("_previous")]
-        public string Previous { get; private set; }
-        [JsonPropertyName("_self")]
-        public string Self { get; private set; }
-        [JsonPropertyName("_next")]
-        public string Next { get; private set; }
-        [JsonPropertyName("_tail")]
-        public string Tail { get; private set; }
+        [JsonPropertyName("meta")]
+        public Link Meta { get; private set; }
+        [JsonPropertyName("head")]
+        public Link Head { get; private set; }
+        [JsonPropertyName("previous")]
+        public Link Previous { get; private set; }
+        [JsonPropertyName("self")]
+        public Link Self { get; private set; }
+        [JsonPropertyName("next")]
+        public Link Next { get; private set; }
+        [JsonPropertyName("tail")]
+        public Link Tail { get; private set; }
+        [JsonPropertyName("page")]
+        public Link Page { get; private set; }
     }
 
     public class PageMeta
     {
-        public PageMeta(long eventCount, int eventsPerPage, int pages, MetaLinks links)
+        public PageMeta(long eventCount, int eventsPerPage, int pageCount, MetaLinks links)
         {
             EventCount = eventCount;
             EventsPerPage = eventsPerPage;
-            Pages = pages;
+            this.pageCount = pageCount;
             Links = links;
         }
 
@@ -64,24 +107,24 @@ namespace EventFeed.AspNetCore
         public long EventCount { get; private set; }
         [JsonPropertyName("eventsPerPage")]
         public int EventsPerPage { get; private set; }
-        [JsonPropertyName("pages")]
-        public int Pages { get; private set; }
+        [JsonPropertyName("pageCount")]
+        public int pageCount { get; private set; }
         [JsonPropertyName("_links")]
         public MetaLinks Links { get; set; }
     }
 
     public class EventFeedPage
     {
-        public EventFeedPage(int page, FeedEvent[] events, Links links, bool isComplete)
+        public EventFeedPage(int pageNumber, FeedEvent[] events, Links links, bool isComplete)
         {
-            Page = page;
+            PageNumber = pageNumber;
             Events = events;
             Links = links;
             IsComplete = isComplete;
         }
 
-        [JsonPropertyName("page")]
-        public int Page { get; private set; }
+        [JsonPropertyName("pageNumber")]
+        public int PageNumber { get; private set; }
         [JsonPropertyName("events")]
         public FeedEvent[] Events { get; private set; }
         [JsonPropertyName("_links")]
@@ -126,35 +169,42 @@ namespace EventFeed.AspNetCore
             var totalPages = Paging.TotalPages(eventCount, eventsPerPage);
             // TODO: check registered
             // TODO: write metrics
-            if (IsEventFeedMetaRequest(context, basePath))
+            if(IsEventFeedRequest(context, basePath))
             {
-                await MetaPageResponse(context, basePath, eventCount, eventsPerPage, totalPages);
-            }
-            else if (IsPageRequest(context, basePath))
-            {
-                var segments = GetSegments(context);
-                if (IsMissingPageNumber(segments))
+                if (IsEventFeedMetaRequest(context, basePath))
                 {
-                    await BadRequest(context, basePath, totalPages, "No `page` number supplied.");
+                    await MetaPageResponse(context, basePath, eventCount, eventsPerPage, totalPages);
                 }
-                else
+                else if (IsPageRequest(context, basePath))
                 {
-                    string pageNumberString = FindPageNumberSegment(segments);
-                    if (int.TryParse(pageNumberString, out var pageNumber))
+                    var segments = GetSegments(context);
+                    if (IsMissingPageNumber(segments))
                     {
-                        if(pageNumber > totalPages)
-                        {
-                            await BadRequest(context, basePath, totalPages, $"Page {pageNumber} is greater than the current total number of pages {totalPages}.");
-                        }
-                        else
-                        {
-                            await EventFeedPage(context, basePath, eventsPerPage, totalPages, pageNumber);
-                        }
+                        RedirectToFirstPage(context, basePath, totalPages);
                     }
                     else
                     {
-                        await BadRequest(context, basePath, totalPages, $"{pageNumberString} is not a valid page.");
+                        string pageNumberString = FindPageNumberSegment(segments);
+                        if (int.TryParse(pageNumberString, out var pageNumber))
+                        {
+                            if (pageNumber > totalPages)
+                            {
+                                await UnknownPageRequest(context, $"Page {pageNumber} is greater than the current total number of pages {totalPages}.");
+                            }
+                            else
+                            {
+                                await EventFeedPage(context, basePath, eventsPerPage, totalPages, pageNumber);
+                            }
+                        }
+                        else
+                        {
+                            await BadRequest(context, $"{pageNumberString} is not a valid page number.");
+                        }
                     }
+                }
+                else
+                {
+                    await BadRequest(context, $"Unknown resource.");
                 }
             }
             else
@@ -167,22 +217,23 @@ namespace EventFeed.AspNetCore
         {
             var events = feedReader.ReadPage(pageNumber).ToArray();
             var headLink = HeadLink(basePath);
-            string previousLink = PreviousLink(basePath, pageNumber);
-            string selfLink = SelfLink(basePath, pageNumber);
-            string nextLink = NextLink(basePath, pageNumber, totalPages);
+            var previousLink = PreviousLink(basePath, pageNumber);
+            var selfLink = SelfLink(basePath, pageNumber);
+            var nextLink = NextLink(basePath, pageNumber, totalPages);
             var tailLink = TailLink(basePath, totalPages);
-            var links = new Links(basePath, headLink, previousLink, selfLink, nextLink, tailLink);
+            var pageLink = PageLink(basePath);
+            var links = new Links(basePath, headLink, previousLink, selfLink, nextLink, tailLink, pageLink);
             var isComplete = events.Length == eventsPerPage;
             var content = new EventFeedPage(pageNumber, events, links, isComplete);
-            context.Response.ContentType = "application/json";
+            context.Response.ContentType = "application/hal+json";
             await context.Response.WriteAsync(EventFeedPageSerializerContext.Serialize(content));
         }
 
-        private static string PreviousLink(string basePath, int pageNumber)
+        private static Link PreviousLink(string basePath, int pageNumber)
         {
             if(pageNumber > 1)
             {
-                return $"{basePath}/page/{pageNumber - 1}";
+                return $"{basePath}/pages/{pageNumber - 1}";
             }
             else
             {
@@ -190,22 +241,27 @@ namespace EventFeed.AspNetCore
             }
         }
 
-        private static string SelfLink(string basePath, int pageNumber)
+        private static Link SelfLink(string basePath, int pageNumber)
         {
-            return $"{basePath}/page/{pageNumber}";
+            return $"{basePath}/pages/{pageNumber}";
         }
 
-        private static string NextLink(string basePath, int pageNumber, int totalPages)
+        private static Link NextLink(string basePath, int pageNumber, int totalPages)
         {
             var nextPage = pageNumber + 1;
             if(nextPage <= totalPages)
             {
-                return $"{basePath}/page/{nextPage}";
+                return $"{basePath}/pages/{nextPage}";
             }
             else
             {
                 return string.Empty;
             }
+        }
+
+        private static Link PageLink(string basePath)
+        {
+            return new Link("{basePath}/pages/{pageNumber}", true);
         }
 
         private static string FindPageNumberSegment(string[] segments)
@@ -219,38 +275,74 @@ namespace EventFeed.AspNetCore
             return context.Request.Path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
         }
 
-        private static async Task BadRequest(HttpContext context, string basePath, int totalPages, string message)
+        private static void RedirectToFirstPage(HttpContext context, string basePath, int totalPages)
         {
-            var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages));
-            var content = new BadRequestContent(message, links);
-            context.Response.StatusCode = 400;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(BadRequestContentSerializerContext.Serialize(content));
+            var links = new MetaLinks(basePath, HeadLink(basePath), TailLink(basePath, totalPages), PageLink(basePath));
+            context.Response.StatusCode = 307;
+            context.Response.Headers["Location"] = $"{basePath}/pages/1";
+        }
+
+        private static async Task UnknownPageRequest(HttpContext context, string message)
+        {
+            var problemDetails = new ProblemDetails()
+            {
+                Title = "Unknown page requested",
+                Detail = message,
+                Instance = context.Request.Path,
+                Status = 404,
+                Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+            };
+            context.Response.StatusCode = 404;
+            context.Response.ContentType = "application/problem+json";
+            await context.Response.WriteAsync(ProblemDetailsSerializerContext.Serialize(problemDetails));
+        }
+
+        private static async Task BadRequest(HttpContext context, string message)
+        {
+            var status = 400;
+            var problemDetails = new ProblemDetails()
+            {
+                Title = "Bad request",
+                Detail = message,
+                Instance = context.Request.Path,
+                Status = status,
+                Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400"
+            };
+            context.Response.StatusCode = status;
+            context.Response.ContentType = "application/problem+json";
+            await context.Response.WriteAsync(ProblemDetailsSerializerContext.Serialize(problemDetails));
         }
 
         private async Task MetaPageResponse(HttpContext context, string basePath, long eventCount, int eventsPerPage, int totalPages)
         {
             var head = HeadLink(basePath);
             var tail = TailLink(basePath, totalPages);
-            var links = new MetaLinks(basePath, head, tail);
+            var page = PageLink(basePath);
+            var links = new MetaLinks(basePath, head, tail, page);
             var content = new PageMeta(eventCount, eventsPerPage, totalPages, links);
-            context.Response.ContentType = "application/json";
+            context.Response.ContentType = "application/hal+json";
             await context.Response.WriteAsync(PageMetaSerializerContext.Serialize(content));
         }
 
         private static bool IsMissingPageNumber(string[] segments)
         {
-            return segments.Length < 4;
+            return  segments.Length < 4;
         }
 
-        private static string HeadLink(string basePath)
+        private static Link HeadLink(string basePath)
         {
-            return $"{basePath}/page/1";
+            return $"{basePath}/pages/1";
         }
 
-        private static string TailLink(string basePath, int totalPages)
+        private static Link TailLink(string basePath, int totalPages)
         {
-            return $"{basePath}/page/{totalPages}";
+            return $"{basePath}/pages/{totalPages}";
+        }
+
+        private static bool IsEventFeedRequest(HttpContext context, string path)
+        {
+            var pathsMatch = (context.Request.Path.StartsWithSegments(path));
+            return IsGetRequest(context) && pathsMatch;
         }
 
         private static bool IsEventFeedMetaRequest(HttpContext context, string path)
@@ -261,7 +353,7 @@ namespace EventFeed.AspNetCore
 
         private static bool IsPageRequest(HttpContext context, string basePath)
         {
-            var pagePath = basePath + "/page";
+            var pagePath = basePath + "/pages";
             var isPage = context.Request.Path.StartsWithSegments(pagePath);
             return IsGetRequest(context) && isPage;
         }
