@@ -19,6 +19,6 @@ On a high level, these libraries provide building blocks allowing a system to:
 
 ## Components
 
-- [Persistence](PERSISTENCE.md)
+- [Persistence](PRODUCER-PERSISTENCE.md)
 - [Producer middleware](PRODUCER-MIDDLEWARE.md)
 - [Consumer](CONSUMER.md)
