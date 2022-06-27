@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Version>0.0.0-alpha</Version>
+		<Version>0.0.1-alpha</Version>
 		<Authors>Devon Burriss;Robert Massa</Authors>
 		<Copyright>Devon Burriss 2022</Copyright>
 		<PackageTags>messaging;persistent;mssql</PackageTags>
