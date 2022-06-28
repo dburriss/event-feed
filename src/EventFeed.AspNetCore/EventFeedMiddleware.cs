@@ -269,10 +269,10 @@ namespace EventFeed.AspNetCore
             return segments[3];
             // TODO: search for page and increment
         }
-
+        readonly static char[] separator = new char[] { '/' };
         private static string[] GetSegments(HttpContext context)
         {
-            return context.Request.Path.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            return context.Request.Path.Value.Split(separator, options: StringSplitOptions.RemoveEmptyEntries);
         }
 
         private static void RedirectToFirstPage(HttpContext context, string basePath, int totalPages)
