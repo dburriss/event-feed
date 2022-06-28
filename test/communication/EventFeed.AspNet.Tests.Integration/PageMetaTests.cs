@@ -10,12 +10,13 @@ namespace EventFeed.AspNet.Tests.Integration
 {
     public class PageMetaTests
     {
+        const string defaultRoute = "/api/event-feed";
         [Fact]
         public async Task Meta_endpoint_is_available()
         {
             using var host = await A.Host.Build();
 
-            var response = await host.GetTestClient().GetAsync("/api/event-feed");
+            var response = await host.GetTestClient().GetAsync(defaultRoute);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
@@ -24,7 +25,7 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.Build();
 
-            var response = await host.GetTestClient().GetAsync("/api/event-feed/");
+            var response = await host.GetTestClient().GetAsync(defaultRoute);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
@@ -33,7 +34,7 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.Build();
 
-            var response = await host.GetTestClient().GetAsync("/api/event-feed");
+            var response = await host.GetTestClient().GetAsync(defaultRoute);
             var pageMeta = PageMetaSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
             Assert.Equal(0, pageMeta!.EventCount);
             Assert.Equal(1, pageMeta.pageCount);
@@ -44,7 +45,7 @@ namespace EventFeed.AspNet.Tests.Integration
         {
             using var host = await A.Host.Build();
 
-            var response = await host.GetTestClient().GetAsync("/api/event-feed");
+            var response = await host.GetTestClient().GetAsync(defaultRoute);
             var pageMeta = PageMetaSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
             Assert.Equal(pageMeta!.Links.Head.Href, pageMeta.Links.Tail.Href);
         }

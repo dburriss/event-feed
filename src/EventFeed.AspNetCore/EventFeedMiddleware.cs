@@ -46,16 +46,16 @@ namespace EventFeed.AspNetCore
     }
     public class MetaLinks
     {
-        public MetaLinks(Link meta, Link head, Link tail, Link page)
+        public MetaLinks(Link self, Link head, Link tail, Link page)
         {
-            Meta = meta;
+            Self = self;
             Head = head;
             Tail = tail;
             Page = page;
         }
 
-        [JsonPropertyName("meta")]
-        public Link Meta { get; private set; }
+        [JsonPropertyName("self")]
+        public Link Self { get; private set; }
         [JsonPropertyName("head")]
         public Link Head { get; private set; }
         [JsonPropertyName("tail")]
