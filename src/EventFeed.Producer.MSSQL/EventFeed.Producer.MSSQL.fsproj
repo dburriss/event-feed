@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Version>0.0.0-alpha</Version>
+		<Version>0.0.1-alpha</Version>
 		<Authors>Devon Burriss;Robert Massa</Authors>
 		<Copyright>Devon Burriss 2022</Copyright>
 		<PackageTags>messaging;persistent;mssql</PackageTags>
