@@ -46,8 +46,19 @@ namespace EventFeed.AspNet.Tests.Integration
             using var host = await A.Host.Build();
 
             var response = await host.GetTestClient().GetAsync(defaultRoute);
-            var pageMeta = PageMetaSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
+            var json = await response.Content.ReadAsStringAsync();
+            var pageMeta = PageMetaSerializerContext.Deserialize(json);
             Assert.Equal(pageMeta!.Links.Head.Href, pageMeta.Links.Tail.Href);
+        }
+
+        [Fact]
+        public async Task With_events_head_not_equal_tail()
+        {
+            using var host = await A.Host.SetEventsPerPage(10).WithRandomEvents(20).Build();
+
+            var response = await host.GetTestClient().GetAsync(defaultRoute);
+            var pageMeta = PageMetaSerializerContext.Deserialize(await response.Content.ReadAsStringAsync());
+            Assert.NotEqual(pageMeta!.Links.Head.Href, pageMeta.Links.Tail.Href);
         }
     }
 }

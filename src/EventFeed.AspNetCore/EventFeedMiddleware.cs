@@ -261,7 +261,7 @@ namespace EventFeed.AspNetCore
 
         private static Link PageLink(string basePath)
         {
-            return new Link("{basePath}/pages/{pageNumber}", true);
+            return new Link($"{basePath}/pages/{{pageNumber}}", true);
         }
 
         private static string FindPageNumberSegment(string[] segments)

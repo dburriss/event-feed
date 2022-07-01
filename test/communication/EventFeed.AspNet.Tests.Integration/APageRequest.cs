@@ -114,9 +114,11 @@ namespace EventFeed.AspNet.Tests.Integration
             var totalEvents = pageLength * 2;
             using var host = await A.Host.SetEventsPerPage(pageLength).WithRandomEvents(totalEvents).Build();
             var response1 = await host.GetTestClient().GetAsync(pageUrl(1));
+            var json1 = await response1.Content.ReadAsStringAsync();
+            var page1 = EventFeedPageSerializerContext.Deserialize(json1);
             var response2 = await host.GetTestClient().GetAsync(pageUrl(2));
-            var page1 = EventFeedPageSerializerContext.Deserialize(await response1.Content.ReadAsStringAsync());
-            var page2 = EventFeedPageSerializerContext.Deserialize(await response2.Content.ReadAsStringAsync());
+            var json2 = await response2.Content.ReadAsStringAsync();
+            var page2 = EventFeedPageSerializerContext.Deserialize(json2);
             var pg1FirstEv = page1!.Events[0];
             var pg1LastEv = page1.Events[pageLength - 1];
             var pg2FirstEv = page2!.Events[0];
