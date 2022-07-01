@@ -4,6 +4,7 @@ open System
 open System.Net.Http
 open System.Threading.Tasks
 open System.Text.Json
+open System.Threading
 
 
 type Link = {
@@ -69,6 +70,11 @@ type Page with
 type GetAction = string -> HttpResponseMessage
 
 // what about a state machine?
+// Page
+// LastPage
+// SamePage
+// MetaPage
+// Error
 type EventFeedClient =
     abstract member Meta : unit -> Task<Meta>
     abstract member Head : unit -> Task<Page>
@@ -79,71 +85,119 @@ type EventFeedClient =
 type EventFeedHttpClient(baseUri : Uri, httpClientFactory : IHttpClientFactory) =
     let mutable headUrl = None
     let mutable pageUrl = None
+    let mutable nextUrl = None
+    let mutable tailUrl = None
 
     let httpClient() =
         let httpClient = httpClientFactory.CreateClient()
         do httpClient.BaseAddress <- baseUri
         httpClient
 
-    let getMeta (httpClient : HttpClient) (url : string option) =
-        task {
-            let! metaReponse = httpClient.GetAsync(Option.defaultValue "/" url)
-            let! metaJson = metaReponse.Content.ReadAsStringAsync()
-            let meta = Meta.Deserialize(metaJson)
-            headUrl <- Some(meta._links.head.href)
-            pageUrl <- Some(meta._links.page.href)
-            return meta
-        }
-
-    let getPage (httpClient : HttpClient) (url : string) = 
+    let getPageF (httpClient : HttpClient) (url : string) parseResponse = 
         task {
             try 
                 let! pageReponse = httpClient.GetAsync(url)
                 if pageReponse.IsSuccessStatusCode then
                     let! pageJson = pageReponse.Content.ReadAsStringAsync()
-                    let page = Page.Deserialize(pageJson)
+                    let page = parseResponse(pageJson)
                     return Ok(page)
-                else return Error $"Fetching page failed. {pageReponse.StatusCode} {pageReponse.ReasonPhrase}"
+                else return Error $"Fetching {url} failed. {pageReponse.StatusCode} {pageReponse.ReasonPhrase}"
             with 
             | ex -> return Error ex.Message
         }
 
+    let getMeta (httpClient : HttpClient) (url : string option) =
+        let url = Option.defaultValue "/" url
+        let handleResponse json =
+            let meta = Meta.Deserialize json
+            headUrl <- Some meta._links.head.href
+            pageUrl <- Some meta._links.page.href
+            meta
+
+        getPageF httpClient url handleResponse
+
+    let getPage (httpClient : HttpClient) (url : string) = 
+        getPageF httpClient url Page.Deserialize
+
     interface EventFeedClient with
+
+        member this.Meta() = 
+            task {
+                let! result = getMeta (httpClient()) (Some(baseUri.AbsoluteUri)) 
+                let meta = 
+                    match result with
+                    | Ok y -> y
+                    | Error err -> failwith err
+                return meta
+            }
+
         member this.Page i =
             let httpClient = httpClient()
             task {
                 if pageUrl.IsNone then
-                    let! meta = getMeta httpClient (Some(baseUri.AbsoluteUri))
-                    pageUrl <- Some meta._links.page.href
+                    let _ = getMeta httpClient (Some(baseUri.AbsoluteUri))
                     if pageUrl.IsNone then 
                         failwith "`page` is required in _links."
                     
-                let! pageReponse = httpClient.GetAsync(pageUrl.Value)
-                let! pageJson = pageReponse.Content.ReadAsStringAsync()
-                let page = JsonSerializer.Deserialize<Page>(pageJson)
+                let! result  = getPage httpClient pageUrl.Value
+                let page = 
+                    match result with
+                    | Ok y -> y
+                    | Error err -> failwith err
 
                 return page
             }
 
         member this.Head() =
-            failwith "Not implemented"
-
-        member this.Next() =
-            failwith "Not implemented"        
-            
-        member this.Tail() =
-            failwith "Not implemented"
-
-        member this.Meta() = 
             let httpClient = httpClient()
             task {
-                let! metaReponse = httpClient.GetAsync("/")
-                let! metaJson = metaReponse.Content.ReadAsStringAsync()
-                let meta = JsonSerializer.Deserialize<Meta>(metaJson)
-                headUrl <- Some(meta._links.head.href)
-                pageUrl <- Some(meta._links.page.href)
-                return meta
+                if headUrl.IsNone then
+                    let _ = getMeta httpClient (Some(baseUri.AbsoluteUri))
+                    if headUrl.IsNone then 
+                        failwith "`page` is required in _links."
+                    
+                let! result  = getPage httpClient headUrl.Value
+                let page = 
+                    match result with
+                    | Ok y -> y
+                    | Error err -> failwith err
+
+                return page
             }
+
+        member this.Next() =
+            let httpClient = httpClient()
+            task {
+                if nextUrl.IsNone then
+                    let _ = getMeta httpClient (Some(baseUri.AbsoluteUri))
+                    if nextUrl.IsNone then 
+                        failwith "`page` is required in _links."
+                    
+                let! result  = getPage httpClient nextUrl.Value
+                let page = 
+                    match result with
+                    | Ok y -> y
+                    | Error err -> failwith err
+
+                return page
+            }
+        member this.Tail() =
+            let httpClient = httpClient()
+            task {
+                if tailUrl.IsNone then
+                    let _ = getMeta httpClient (Some(baseUri.AbsoluteUri))
+                    if tailUrl.IsNone then 
+                        failwith "`page` is required in _links."
+                    
+                let! result  = getPage httpClient tailUrl.Value
+                let page = 
+                    match result with
+                    | Ok y -> y
+                    | Error err -> failwith err
+
+                return page
+            }
+
             
 
 type EventFeedConsumer(client : EventFeedClient) =
