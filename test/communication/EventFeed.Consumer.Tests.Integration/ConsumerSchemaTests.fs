@@ -124,4 +124,5 @@ module ConsumerSchemaTests =
         Assert.False(page._links.self.templated)
         Assert.False(page._links.tail.templated)
         Assert.True(page._links.page.templated)
+        Assert.True(page.isComplete)
 

@@ -58,10 +58,15 @@ type PageLinks = {
     page : Link
 }
 
+type FeedEvent = {
+    name : string
+}
+
 type Page = {
     _links : PageLinks
     pageNumber : int
-
+    isComplete : bool
+    events : FeedEvent array
 }
 type Page with
     static member Deserialize(json: string) =
