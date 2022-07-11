@@ -164,7 +164,10 @@ type EventFeedHttpClient(baseUri : Uri, httpClientFactory : IHttpClientFactory) 
                 let! result  = getPage httpClient headUrl.Value
                 let page = 
                     match result with
-                    | Ok y -> y
+                    | Ok p -> 
+                        nextUrl <- p._links.next |> Option.map(fun n -> n.href)
+                        tailUrl <- Option.ofObj(p._links.tail.href :> obj)
+                        p
                     | Error err -> failwith err
 
                 return page
@@ -178,7 +181,7 @@ type EventFeedHttpClient(baseUri : Uri, httpClientFactory : IHttpClientFactory) 
                     if nextUrl.IsNone then 
                         failwith "`page` is required in _links."
                     
-                let! result  = getPage httpClient nextUrl.Value
+                let! result  = getPage httpClient (nextUrl.Value)
                 let page = 
                     match result with
                     | Ok y -> y

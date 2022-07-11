@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="EventFeedClientTests.fs" />
     <Compile Include="LinkTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
