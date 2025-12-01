@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<!-- Conditionally obtain references to Microsoft.AspNetCore.TestHost  SEE BELOW -->
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
 		<PackageReference Include="xunit" Version="2.4.1" />
@@ -25,13 +24,7 @@
 		<ProjectReference Include="..\..\..\src\EventFeed.AspNetCore\EventFeed.AspNetCore.csproj" />
 	</ItemGroup>
 
-	<!-- Conditionally obtain references for the .NET 6 target -->
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.3" />
-	</ItemGroup>
-
-	<!-- Conditionally obtain references for the .NET Standard target -->
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="3.1.26" />
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.0" />
 	</ItemGroup>
 </Project>
