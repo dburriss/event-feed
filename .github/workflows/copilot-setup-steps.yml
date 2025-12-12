@@ -34,9 +34,9 @@ jobs:
 
       # Setup multiple .NET SDK versions in a single step for efficiency
       # Using specific versions for reproducibility and deterministic builds
-      # .NET 6.0.428 - LTS (Long Term Support)
-      # .NET 8.0.416 - LTS (Long Term Support)  
-      # .NET 10.0.101 - STS (Standard Term Support)
+      # .NET 6.0.428 - LTS (Long-Term Support)
+      # .NET 8.0.416 - LTS (Long-Term Support)  
+      # .NET 10.0.101 - STS (Standard-Term Support)
       - name: Setup .NET 6, 8, and 10 SDKs
         uses: actions/setup-dotnet@v4
         with:
