@@ -1,0 +1,91 @@
+name: Copilot Setup Steps for Multi-Version .NET
+
+# This workflow configures the environment for GitHub Copilot to work with .NET 6, 8, and 10 projects.
+# It runs automatically when this workflow file is modified and can be manually triggered.
+# The job name 'copilot-setup-steps' is required for Copilot agent recognition.
+# Documentation: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customize-the-agent-environment
+
+on:
+  # Allows manual triggering from Actions tab
+  workflow_dispatch:
+  # Runs when this workflow file is modified to validate changes
+  push:
+    paths:
+      - '.github/workflows/copilot-setup-steps.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/copilot-setup-steps.yml'
+
+# Security: Use minimum required permissions following the principle of least privilege
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    name: Setup Multi-Version .NET Environment
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout with full history for better context
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Setup multiple .NET SDK versions in a single step for efficiency
+      # Using specific versions for reproducibility and deterministic builds
+      # .NET 6.0.428 - LTS (Long Term Support)
+      # .NET 8.0.416 - LTS (Long Term Support)  
+      # .NET 10.0.101 - STS (Standard Term Support)
+      - name: Setup .NET 6, 8, and 10 SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.428
+            8.0.416
+            10.0.101
+          # Enable NuGet package caching for improved performance
+          # Caches are scoped per workflow and branch
+          cache: true
+          # Path to packages.lock.json files for cache key calculation
+          # This ensures cache invalidation when dependencies change
+          cache-dependency-path: '**/packages.lock.json'
+
+      # Configure .NET environment variables for optimal behavior
+      # DOTNET_ROOT: Explicit SDK root path for consistency
+      # DOTNET_CLI_TELEMETRY_OPTOUT: Disable telemetry for faster operations and privacy
+      - name: Set .NET environment variables
+        run: |
+          echo "DOTNET_ROOT=$HOME/.dotnet" >> $GITHUB_ENV
+          echo "DOTNET_CLI_TELEMETRY_OPTOUT=1" >> $GITHUB_ENV
+          echo "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1" >> $GITHUB_ENV
+
+      # Verify installed .NET versions
+      - name: Display .NET info
+        run: dotnet --info
+
+      # Restore dependencies with locked mode for deterministic package versions
+      # --locked-mode ensures exact versions from packages.lock.json are used
+      # This prevents unexpected dependency changes and improves build reproducibility
+      - name: Restore dependencies with lock file
+        run: dotnet restore --locked-mode
+
+      # Install dotnet-format tool globally for code formatting capabilities
+      # This enables consistent code formatting across the project
+      - name: Install dotnet-format
+        run: dotnet tool install -g dotnet-format
+
+      # Validate that the environment setup works by building the solution
+      # Build without restore since we restored with locked-mode above
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      # Display summary of setup
+      - name: Setup summary
+        run: |
+          echo "✅ Multi-version .NET environment configured successfully"
+          echo "📦 .NET SDK versions installed:"
+          dotnet --list-sdks
+          echo ""
+          echo "🛠️  Global tools installed:"
+          dotnet tool list -g

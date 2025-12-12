@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 
 		<IsPackable>false</IsPackable>
+		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 	</PropertyGroup>
 
 	<!-- Conditionally obtain references to Microsoft.AspNetCore.TestHost  SEE BELOW -->
